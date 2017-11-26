@@ -4,6 +4,7 @@ import android.annotation.SuppressLint;
 import android.app.Dialog;
 import android.graphics.Bitmap;
 import android.graphics.drawable.ColorDrawable;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -72,8 +73,12 @@ public class RedPacketFragment extends DialogFragment {
 
     webView.getSettings().setCacheMode(WebSettings.LOAD_CACHE_ELSE_NETWORK);
 
-    // webView.getSettings().setBlockNetworkImage(true);// 把图片加载放在最后来加载渲染
-    // webView.getSettings().setRenderPriority(WebSettings.RenderPriority.HIGH);
+    if (Build.VERSION.SDK_INT >= 19) {
+      webView.setLayerType(View.LAYER_TYPE_HARDWARE, null);
+    } else {
+      webView.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
+    }
+
     // 支持多窗口
     webView.getSettings().setSupportMultipleWindows(true);
     // 开启 DOM storage API 功能
@@ -95,7 +100,7 @@ public class RedPacketFragment extends DialogFragment {
       return super.onCreateDialog(savedInstanceState);
     }
 
-    dialog.getWindow().getAttributes().windowAnimations = R.style.RedPacketAnimation;
+    dialog.getWindow().getAttributes().windowAnimations = R.style.PacketAnimation;
     return dialog;
   }
 
@@ -115,12 +120,11 @@ public class RedPacketFragment extends DialogFragment {
     } else if (mDialogSize == MICRO) {
       super.onActivityCreated(savedInstanceState);
     }
-
     WindowManager.LayoutParams lp = window.getAttributes();
     lp.dimAmount = 0f;
     window.setAttributes(lp);
+    window.setLayout(2, 2);
     window.setBackgroundDrawable(new ColorDrawable(0x00000000));
-    window.setLayout(1, 1);
   }
 
   @Override public void onDestroy() {

@@ -8,9 +8,14 @@
     <item name="colorAccent">@color/colorAccent</item>
   </style>
 
-  <style name="RedPacketAnimation">
-    <!--<item name="android:windowEnterAnimation">@anim/red_packet_enter</item>-->
-    <!--<item name="android:windowExitAnimation">@anim/red_packet_exit</item>-->
+  <style name="RedAnimation">
+    <item name="android:windowEnterAnimation">@anim/red_packet_enter</item>
+    <item name="android:windowExitAnimation">@anim/red_packet_exit</item>
+  </style>
+
+  <style name="PacketAnimation">
+    <item name="android:windowEnterAnimation">@anim/red_packet_in</item>
+    <item name="android:windowExitAnimation">@anim/red_packet_out</item>
   </style>
 
 </resources>
