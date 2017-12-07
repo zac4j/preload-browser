@@ -25,7 +25,7 @@
       android:layout_marginBottom="8dp"
       android:layout_marginEnd="8dp"
       android:layout_marginStart="8dp"
-      android:onClick="getRedPacket"
+      android:onClick="jump"
       android:text="Button"
       app:layout_constraintBottom_toTopOf="@+id/textView"
       app:layout_constraintEnd_toEndOf="parent"

@@ -13,10 +13,13 @@ public class SecondaryActivity extends AppCompatActivity {
     setContentView(R.layout.activity_secondary);
   }
 
-  @Override protected void onResume() {
-    super.onResume();
+  @Override protected void onStart() {
+    super.onStart();
+    BootPopUpHelper.getInstance().show(getSupportFragmentManager());
+  }
 
-    RedPacketFragment fragment = RedPacketFragment.newInstance(RedPacketFragment.FULLSCREEN);
-    fragment.show(getSupportFragmentManager(), "hello");
+  @Override protected void onStop() {
+    BootPopUpHelper.getInstance().dismiss();
+    super.onStop();
   }
 }
