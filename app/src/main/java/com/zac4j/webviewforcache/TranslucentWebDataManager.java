@@ -1,0 +1,244 @@
+package com.zac4j.webviewforcache;
+
+import android.annotation.SuppressLint;
+import android.app.Application;
+import android.content.Context;
+import android.graphics.Bitmap;
+import android.os.Build;
+import android.os.Handler;
+import android.os.Looper;
+import android.text.TextUtils;
+import android.util.Log;
+import android.view.View;
+import android.view.ViewGroup;
+import android.webkit.WebChromeClient;
+import android.webkit.WebSettings;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
+import android.widget.FrameLayout;
+import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
+import android.widget.Toast;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+/**
+ * A dialog for app start up page
+ * Created by Zaccc on 2017/12/7.
+ */
+
+public class TranslucentWebDataManager {
+
+  private static final String TAG = TranslucentWebDataManager.class.getSimpleName();
+
+  private static final int TIME_OUT_PROGRESS = 70;
+  private static final int TIME_OUT_MILLIS = 3 * 1000;
+
+  private static final Object LOCK = new Object();
+  private static TranslucentWebDataManager sInstance;
+
+  private WebView mWebView;
+
+  // 是否使用预加载
+  private boolean mIsForeLoad;
+  // 是否已预加载
+  private AtomicBoolean mHasForeLoaded;
+
+  public static TranslucentWebDataManager getInstance(Application application) {
+    Log.d(TAG, "Getting boot popup view instance");
+    if (sInstance == null) {
+      synchronized (LOCK) {
+        sInstance = new TranslucentWebDataManager(application);
+        Log.d(TAG, "Made new boot popup view");
+      }
+    }
+    return sInstance;
+  }
+
+  private TranslucentWebDataManager(Application application) {
+    prepareWebView(application);
+    mHasForeLoaded = new AtomicBoolean(false);
+  }
+
+  /**
+   * Load url data before display ui.
+   *
+   * @param url URL for load.
+   */
+  public void foreLoadUrl(String url) {
+
+    if (mWebView == null || TextUtils.isEmpty(url)) {
+      return;
+    }
+
+    mIsForeLoad = true;
+    loadUrl(url);
+  }
+
+  /**
+   * Load remote url
+   *
+   * @param url remote url
+   */
+  public void loadUrl(String url) {
+
+    if (mWebView == null || TextUtils.isEmpty(url)) {
+      return;
+    }
+
+    try {
+      url = URLDecoder.decode(url, "utf-8");
+      mWebView.loadUrl(url);
+    } catch (UnsupportedEncodingException e) {
+      e.printStackTrace();
+    }
+  }
+
+  /**
+   * Prepare WebView instance
+   *
+   * @param context It's better to provide an application context.
+   */
+  private void prepareWebView(Context context) {
+    mWebView = new WebView(context);
+
+    setupWebView(mWebView);
+
+    addBrowserClient(mWebView);
+  }
+
+  public void assembleWebView(ViewGroup container) {
+    ViewGroup.LayoutParams params = new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
+        ViewGroup.LayoutParams.MATCH_PARENT);
+    if (container instanceof FrameLayout) {
+      params = new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
+          ViewGroup.LayoutParams.MATCH_PARENT);
+    } else if (container instanceof RelativeLayout) {
+      params = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
+          ViewGroup.LayoutParams.MATCH_PARENT);
+    } else if (container instanceof LinearLayout) {
+      params = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
+          ViewGroup.LayoutParams.MATCH_PARENT);
+    }
+    mWebView.setLayoutParams(params);
+    container.addView(mWebView);
+  }
+
+  /**
+   * 是否使用预先加载
+   *
+   * @return 返回是否预先加载
+   */
+  public boolean isForeLoad() {
+    return mIsForeLoad;
+  }
+
+  private void addBrowserClient(WebView webView) {
+    try {
+      webView.setWebViewClient(new WebViewClient() {
+
+        @Override public void onLoadResource(WebView view, String url) {
+
+          Log.i("tag", "onLoadResource url=" + url); // 开始加载
+          super.onLoadResource(view, url);
+        }
+
+        @Override public boolean shouldOverrideUrlLoading(WebView webview, String url) {
+
+          Log.i("tag", "intercept url=" + url);
+          // 重写此方法表明点击网页里面的链接还是在当前的webview里跳转，不跳到浏览器那边
+          webview.loadUrl(url);
+          return true;
+        }
+
+        @Override public void onPageStarted(final WebView view, String url, Bitmap favicon) {
+          super.onPageStarted(view, url, favicon);
+
+          new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
+            @Override public void run() {
+              if (view.getProgress() < TIME_OUT_PROGRESS) {
+                Log.e(TAG, "Network connection time out ----- current loading progress is: "
+                    + view.getProgress());
+              }
+            }
+          }, TIME_OUT_MILLIS);
+
+          Log.i(TAG, "onPageStarted: ");
+        }
+
+        @Override public void onPageFinished(WebView view, String url) {
+
+          String title = view.getTitle(); // 得到网页标题
+
+          Log.e("tag", "onPageFinished WebView title=" + title);
+        }
+
+        @Override public void onReceivedError(WebView view, int errorCode, String description,
+            String failingUrl) {
+          Toast.makeText(view.getContext(), "加载错误", Toast.LENGTH_LONG).show();
+        }
+      });
+
+      webView.setWebChromeClient(new WebChromeClient() {
+        @Override public void onProgressChanged(WebView view, int newProgress) {
+          super.onProgressChanged(view, newProgress);
+          Log.d(TAG, "onProgressChanged: " + newProgress);
+          if (view != null && newProgress == 100 && mIsForeLoad) {
+            // Finished fore load.
+            mHasForeLoaded.set(true);
+          }
+        }
+      });
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+  }
+
+  @SuppressLint("SetJavaScriptEnabled") private static void setupWebView(WebView webView) {
+    WebSettings settings = webView.getSettings();
+    settings.setJavaScriptEnabled(true);
+
+    settings.setCacheMode(WebSettings.LOAD_CACHE_ELSE_NETWORK);
+
+    // UI display
+    settings.setUseWideViewPort(true);
+    settings.setLoadWithOverviewMode(true);
+    settings.setBuiltInZoomControls(true);
+    settings.setDisplayZoomControls(false);
+    settings.setTextZoom(100);
+    webView.setScrollBarStyle(View.SCROLLBARS_OUTSIDE_OVERLAY);
+
+    // WebView 的访问、存储、缓存设置
+    settings.setAllowContentAccess(true);
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+      settings.setAllowUniversalAccessFromFileURLs(true);
+    }
+
+    String cachePath = webView.getContext().getDir("webView_cache", Context.MODE_PRIVATE).getPath();
+    settings.setAppCacheEnabled(true);
+    settings.setAppCachePath(cachePath);
+    settings.setCacheMode(WebSettings.LOAD_DEFAULT);
+    settings.setDomStorageEnabled(true);
+    settings.setSavePassword(false);
+    settings.setDatabaseEnabled(true);
+    // Enable record location info
+    settings.setGeolocationEnabled(true);
+
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN_MR1) {
+      webView.removeJavascriptInterface("searchBoxJavaBridge_");
+      webView.removeJavascriptInterface("accessibility");
+      webView.removeJavascriptInterface("accessibilityTraversal");
+    }
+
+    // Enable mix load http/https content
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+      settings.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
+    }
+
+    // Enable remote debugging via chrome://inspect
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+      WebView.setWebContentsDebuggingEnabled(true);
+    }
+  }
+}
