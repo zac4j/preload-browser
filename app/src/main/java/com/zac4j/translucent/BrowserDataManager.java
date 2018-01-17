@@ -1,4 +1,4 @@
-package com.zac4j.webviewforcache;
+package com.zac4j.translucent;
 
 import android.annotation.SuppressLint;
 import android.app.Application;
@@ -7,6 +7,7 @@ import android.graphics.Bitmap;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
+import android.support.v4.app.FragmentManager;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
@@ -24,19 +25,19 @@ import java.net.URLDecoder;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * A dialog for app start up page
+ * A helper class to manage browser container data.
  * Created by Zaccc on 2017/12/7.
  */
 
-public class TranslucentWebDataManager {
+public class BrowserDataManager {
 
-  private static final String TAG = TranslucentWebDataManager.class.getSimpleName();
+  private static final String TAG = BrowserDataManager.class.getSimpleName();
 
   private static final int TIME_OUT_PROGRESS = 70;
   private static final int TIME_OUT_MILLIS = 3 * 1000;
 
   private static final Object LOCK = new Object();
-  private static TranslucentWebDataManager sInstance;
+  private static BrowserDataManager sInstance;
 
   private WebView mWebView;
 
@@ -45,19 +46,19 @@ public class TranslucentWebDataManager {
   // 是否已预加载
   private AtomicBoolean mHasForeLoaded;
 
-  public static TranslucentWebDataManager getInstance(Application application) {
-    Log.d(TAG, "Getting boot popup view instance");
+  public static BrowserDataManager getInstance(Context context) {
+    Logger.d(TAG, "Getting browser data manager instance");
     if (sInstance == null) {
       synchronized (LOCK) {
-        sInstance = new TranslucentWebDataManager(application);
-        Log.d(TAG, "Made new boot popup view");
+        sInstance = new BrowserDataManager(context);
+        Logger.d(TAG, "Made new browser data manager");
       }
     }
     return sInstance;
   }
 
-  private TranslucentWebDataManager(Application application) {
-    prepareWebView(application);
+  private BrowserDataManager(Context context) {
+    prepareWebView(context);
     mHasForeLoaded = new AtomicBoolean(false);
   }
 
@@ -91,7 +92,7 @@ public class TranslucentWebDataManager {
       url = URLDecoder.decode(url, "utf-8");
       mWebView.loadUrl(url);
     } catch (UnsupportedEncodingException e) {
-      e.printStackTrace();
+      Logger.e(TAG, "decode url failed", e);
     }
   }
 
@@ -125,6 +126,17 @@ public class TranslucentWebDataManager {
     container.addView(mWebView);
   }
 
+  public void showDialogAfterLoadData(FragmentManager fragmentManager) {
+    if (mHasForeLoaded.get()) {
+      showDialog(fragmentManager);
+    }
+  }
+
+  public void showDialog(FragmentManager fragmentManager) {
+    BrowserDialogFragment dialogFragment = BrowserDialogFragment.newInstance();
+    dialogFragment.show(fragmentManager);
+  }
+
   /**
    * 是否使用预先加载
    *
@@ -140,13 +152,13 @@ public class TranslucentWebDataManager {
 
         @Override public void onLoadResource(WebView view, String url) {
 
-          Log.i("tag", "onLoadResource url=" + url); // 开始加载
+          Logger.i(TAG, "onLoadResource url=" + url); // 开始加载
           super.onLoadResource(view, url);
         }
 
         @Override public boolean shouldOverrideUrlLoading(WebView webview, String url) {
 
-          Log.i("tag", "intercept url=" + url);
+          Logger.i(TAG, "intercept url=" + url);
           // 重写此方法表明点击网页里面的链接还是在当前的webview里跳转，不跳到浏览器那边
           webview.loadUrl(url);
           return true;
@@ -158,20 +170,20 @@ public class TranslucentWebDataManager {
           new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
             @Override public void run() {
               if (view.getProgress() < TIME_OUT_PROGRESS) {
-                Log.e(TAG, "Network connection time out ----- current loading progress is: "
+                Logger.e(TAG, "Network connection time out ----- current loading progress is: "
                     + view.getProgress());
               }
             }
           }, TIME_OUT_MILLIS);
 
-          Log.i(TAG, "onPageStarted: ");
+          Logger.i(TAG, "onPageStarted: ");
         }
 
         @Override public void onPageFinished(WebView view, String url) {
 
           String title = view.getTitle(); // 得到网页标题
 
-          Log.e("tag", "onPageFinished WebView title=" + title);
+          Logger.e(TAG, "onPageFinished WebView title=" + title);
         }
 
         @Override public void onReceivedError(WebView view, int errorCode, String description,
@@ -183,7 +195,7 @@ public class TranslucentWebDataManager {
       webView.setWebChromeClient(new WebChromeClient() {
         @Override public void onProgressChanged(WebView view, int newProgress) {
           super.onProgressChanged(view, newProgress);
-          Log.d(TAG, "onProgressChanged: " + newProgress);
+          Logger.d(TAG, "onProgressChanged: " + newProgress);
           if (view != null && newProgress == 100 && mIsForeLoad) {
             // Finished fore load.
             mHasForeLoaded.set(true);
@@ -191,7 +203,7 @@ public class TranslucentWebDataManager {
         }
       });
     } catch (Exception e) {
-      e.printStackTrace();
+      Logger.e(TAG, e.getMessage(), e);
     }
   }
 

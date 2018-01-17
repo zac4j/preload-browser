@@ -1,4 +1,4 @@
-package com.zac4j.webviewforcache;
+package com.zac4j.translucent;
 
 import android.os.Bundle;
 import android.os.PersistableBundle;
@@ -8,8 +8,8 @@ import android.util.Log;
 
 public class SecondaryActivity extends AppCompatActivity {
 
-  private static final String TAG = "SecondaryActivity";
-  
+  private static final String TAG = SecondaryActivity.class.getSimpleName();
+
   @Override public void onCreate(@Nullable Bundle savedInstanceState,
       @Nullable PersistableBundle persistentState) {
     super.onCreate(savedInstanceState, persistentState);
@@ -18,23 +18,21 @@ public class SecondaryActivity extends AppCompatActivity {
 
   @Override protected void onStart() {
     super.onStart();
-    Log.d(TAG, "onStart: ");
-    TranslucentWebDataManager.getInstance().show(getSupportFragmentManager());
+    Logger.d(TAG, "onStart: ");
   }
 
   @Override protected void onRestart() {
-    Log.d(TAG, "onRestart: ");
+    Logger.d(TAG, "onRestart: ");
     super.onRestart();
   }
 
   @Override protected void onResume() {
-    Log.d(TAG, "onResume: ");
+    Logger.d(TAG, "onResume: ");
     super.onResume();
   }
 
   @Override protected void onStop() {
-    TranslucentWebDataManager.getInstance().dismiss();
-    Log.d(TAG, "onStop: ");
+    Logger.d(TAG, "onStop: ");
     super.onStop();
   }
 }

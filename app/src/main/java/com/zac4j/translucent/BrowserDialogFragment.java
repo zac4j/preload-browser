@@ -1,43 +1,43 @@
-package com.zac4j.webviewforcache;
+package com.zac4j.translucent;
 
 import android.annotation.SuppressLint;
-import android.content.DialogInterface;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.DialogFragment;
-import android.util.Log;
+import android.support.v4.app.FragmentManager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
-import android.webkit.WebView;
 import android.widget.FrameLayout;
 
 /**
- * A fullscreen dialog fragment
+ * A fullscreen webView dialog fragment
  * Created by Zaccc on 11/20/2017.
  */
 
-public class TranslucentWebDialogFragment extends DialogFragment {
+public class BrowserDialogFragment extends DialogFragment {
 
-  private static final String TAG = TranslucentWebDialogFragment.class.getSimpleName();
-  private FrameLayout mBrowserContainer;
+  private static final String TAG = BrowserDialogFragment.class.getSimpleName();
 
-  public static TranslucentWebDialogFragment newInstance() {
-    return new TranslucentWebDialogFragment();
+  public static BrowserDialogFragment newInstance() {
+    return new BrowserDialogFragment();
   }
 
   @SuppressLint("SetJavaScriptEnabled") @Nullable @Override
-  public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container,
+  public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
       @Nullable Bundle savedInstanceState) {
     return inflater.inflate(R.layout.fragment_dialog_fullscreen, container, false);
   }
 
-  @Override public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
+  @Override public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
     super.onViewCreated(view, savedInstanceState);
-    mBrowserContainer = view.findViewById(R.id.container);
+    FrameLayout browserContainer = view.findViewById(R.id.container);
+    BrowserDataManager.getInstance(getContext().getApplicationContext())
+        .assembleWebView(browserContainer);
   }
 
   @Override public void onActivityCreated(Bundle savedInstanceState) {
@@ -57,5 +57,9 @@ public class TranslucentWebDialogFragment extends DialogFragment {
     window.setLayout(WindowManager.LayoutParams.MATCH_PARENT,
         WindowManager.LayoutParams.MATCH_PARENT);
     window.setBackgroundDrawable(new ColorDrawable(0x00000000));
+  }
+
+  public void show(FragmentManager fragmentManager) {
+    super.show(fragmentManager, TAG);
   }
 }

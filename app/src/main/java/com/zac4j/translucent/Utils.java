@@ -1,4 +1,4 @@
-package com.zac4j.webviewforcache;
+package com.zac4j.translucent;
 
 import android.content.Context;
 import android.net.ConnectivityManager;
