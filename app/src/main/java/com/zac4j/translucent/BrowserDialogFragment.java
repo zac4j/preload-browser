@@ -23,8 +23,28 @@ public class BrowserDialogFragment extends DialogFragment {
 
   private static final String TAG = BrowserDialogFragment.class.getSimpleName();
 
-  public static BrowserDialogFragment newInstance() {
-    return new BrowserDialogFragment();
+  public static final String EXTRA_DIALOG_SIZE = "dialog_size";
+
+  public static final int FULLSCREEN = 0xaa;
+  public static final int MICRO = 0xbb;
+
+  private int mSize = MICRO;
+  private View mRootView;
+
+  public static BrowserDialogFragment newInstance(int size) {
+    Bundle args = new Bundle();
+    BrowserDialogFragment fragment = new BrowserDialogFragment();
+    args.putInt(EXTRA_DIALOG_SIZE, size);
+    fragment.setArguments(args);
+    return fragment;
+  }
+
+  @Override public void onCreate(@Nullable Bundle savedInstanceState) {
+    super.onCreate(savedInstanceState);
+    if (getArguments() != null) {
+      mSize = getArguments().getInt(EXTRA_DIALOG_SIZE, FULLSCREEN);
+      Logger.d(TAG, "Dialog size: " + mSize);
+    }
   }
 
   @SuppressLint("SetJavaScriptEnabled") @Nullable @Override
@@ -35,31 +55,54 @@ public class BrowserDialogFragment extends DialogFragment {
 
   @Override public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
     super.onViewCreated(view, savedInstanceState);
-    FrameLayout browserContainer = view.findViewById(R.id.container);
-    BrowserDataManager.getInstance(getContext().getApplicationContext())
-        .assembleWebView(browserContainer);
+    mRootView = view;
   }
 
   @Override public void onActivityCreated(Bundle savedInstanceState) {
+    // 获取屏幕Window 对象
+    super.onActivityCreated(savedInstanceState);
+
     Window window = getDialog().getWindow();
 
-    if (window == null) {
-      super.onActivityCreated(savedInstanceState);
+    if (window == null || mSize == 0) {
       return;
     }
 
-    window.requestFeature(Window.FEATURE_NO_TITLE);
-    super.onActivityCreated(savedInstanceState);
-    WindowManager.LayoutParams lp = window.getAttributes();
-    lp.dimAmount = 0f;
-    window.setAttributes(lp);
-    // 占满全屏
-    window.setLayout(WindowManager.LayoutParams.MATCH_PARENT,
-        WindowManager.LayoutParams.MATCH_PARENT);
+    // 全屏展示Dialog
+    if (mSize == FULLSCREEN) {
+      window.setLayout(WindowManager.LayoutParams.MATCH_PARENT,
+          WindowManager.LayoutParams.MATCH_PARENT);
+      // 最小化展示Dialog
+    } else if (mSize == MICRO) {
+      window.setLayout(1, 1);
+    }
+
+    // 去除Dialog 灰色底色
+    WindowManager.LayoutParams params = window.getAttributes();
+    params.dimAmount = 0.0f;
+    window.setAttributes(params);
+    // 底色为全透明
     window.setBackgroundDrawable(new ColorDrawable(0x00000000));
   }
 
-  public void show(FragmentManager fragmentManager) {
-    super.show(fragmentManager, TAG);
+  public void updateDialogSize(int size) {
+    Window window = getDialog().getWindow();
+
+    if (window == null || size == 0) {
+      return;
+    }
+
+    // 全屏展示Dialog
+    if (size == FULLSCREEN) {
+      window.setLayout(WindowManager.LayoutParams.MATCH_PARENT,
+          WindowManager.LayoutParams.MATCH_PARENT);
+      // 最小化展示Dialog
+    } else if (size == MICRO) {
+      window.setLayout(1, 1);
+    }
+  }
+
+  public ViewGroup getBrowserContainer() {
+    return mRootView.findViewById(R.id.container);
   }
 }

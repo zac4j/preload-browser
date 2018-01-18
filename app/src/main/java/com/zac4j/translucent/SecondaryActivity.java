@@ -4,7 +4,6 @@ import android.os.Bundle;
 import android.os.PersistableBundle;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 
 public class SecondaryActivity extends AppCompatActivity {
 
@@ -27,8 +26,17 @@ public class SecondaryActivity extends AppCompatActivity {
   }
 
   @Override protected void onResume() {
-    Logger.d(TAG, "onResume: ");
     super.onResume();
+    Logger.d(TAG, "onResume: ");
+    BrowserManager browserManager = BrowserManager.getInstance(getApplicationContext());
+    System.out.println("我日不走这");
+    if (browserManager.hasForeLoaded()) {
+      Logger.d(TAG, "hasForeLoaded");
+      browserManager.showDialog(getSupportFragmentManager());
+    } else {
+      Logger.d(TAG, "has not  Fore Loaded");
+      browserManager.showOnPageFinished(getSupportFragmentManager());
+    }
   }
 
   @Override protected void onStop() {

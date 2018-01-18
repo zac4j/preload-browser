@@ -5,9 +5,13 @@ import android.app.Application;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.os.Build;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.os.Message;
+import android.support.v4.app.DialogFragment;
 import android.support.v4.app.FragmentManager;
+import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
@@ -33,33 +37,43 @@ public class BrowserDataManager {
 
   private static final String TAG = BrowserDataManager.class.getSimpleName();
 
+  public static final int HANDLE_FORE_LOAD_COMPLETE = 0xff11;
+  public static final int HANDLE_LOAD_DATA_TIMEOUT = 0xff22;
+
   private static final int TIME_OUT_PROGRESS = 70;
   private static final int TIME_OUT_MILLIS = 3 * 1000;
 
-  private static final Object LOCK = new Object();
-  private static BrowserDataManager sInstance;
-
   private WebView mWebView;
 
-  // 是否使用预加载
-  private boolean mIsForeLoad;
   // 是否已预加载
   private AtomicBoolean mHasForeLoaded;
+  // Browser task handler
+  private static BrowserHandler mHandler;
+  private BrowserDialogFragment mDialogFragment;
 
-  public static BrowserDataManager getInstance(Context context) {
-    Logger.d(TAG, "Getting browser data manager instance");
-    if (sInstance == null) {
-      synchronized (LOCK) {
-        sInstance = new BrowserDataManager(context);
-        Logger.d(TAG, "Made new browser data manager");
-      }
-    }
-    return sInstance;
-  }
-
-  private BrowserDataManager(Context context) {
+  public BrowserDataManager(final Context context) {
     prepareWebView(context);
     mHasForeLoaded = new AtomicBoolean(false);
+    mHandler = new BrowserHandler(context, Looper.getMainLooper()) {
+      @Override public void handleMessage(Message msg) {
+        if (msg == null) {
+          return;
+        }
+
+        switch (msg.what) {
+          case HANDLE_FORE_LOAD_COMPLETE:
+            Logger.d(TAG, "Fore load complete.");
+            if (mDialogFragment != null) {
+              mDialogFragment.updateDialogSize(BrowserDialogFragment.FULLSCREEN);
+            }
+            break;
+          case HANDLE_LOAD_DATA_TIMEOUT:
+            Logger.e(TAG, "Network connection time out,current loading progress is: "
+                + mWebView.getProgress());
+            break;
+        }
+      }
+    };
   }
 
   /**
@@ -73,7 +87,6 @@ public class BrowserDataManager {
       return;
     }
 
-    mIsForeLoad = true;
     loadUrl(url);
   }
 
@@ -126,26 +139,6 @@ public class BrowserDataManager {
     container.addView(mWebView);
   }
 
-  public void showDialogAfterLoadData(FragmentManager fragmentManager) {
-    if (mHasForeLoaded.get()) {
-      showDialog(fragmentManager);
-    }
-  }
-
-  public void showDialog(FragmentManager fragmentManager) {
-    BrowserDialogFragment dialogFragment = BrowserDialogFragment.newInstance();
-    dialogFragment.show(fragmentManager);
-  }
-
-  /**
-   * 是否使用预先加载
-   *
-   * @return 返回是否预先加载
-   */
-  public boolean isForeLoad() {
-    return mIsForeLoad;
-  }
-
   private void addBrowserClient(WebView webView) {
     try {
       webView.setWebViewClient(new WebViewClient() {
@@ -167,11 +160,10 @@ public class BrowserDataManager {
         @Override public void onPageStarted(final WebView view, String url, Bitmap favicon) {
           super.onPageStarted(view, url, favicon);
 
-          new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
+          mHandler.postDelayed(new Runnable() {
             @Override public void run() {
               if (view.getProgress() < TIME_OUT_PROGRESS) {
-                Logger.e(TAG, "Network connection time out ----- current loading progress is: "
-                    + view.getProgress());
+                mHandler.sendEmptyMessage(HANDLE_LOAD_DATA_TIMEOUT);
               }
             }
           }, TIME_OUT_MILLIS);
@@ -196,9 +188,11 @@ public class BrowserDataManager {
         @Override public void onProgressChanged(WebView view, int newProgress) {
           super.onProgressChanged(view, newProgress);
           Logger.d(TAG, "onProgressChanged: " + newProgress);
-          if (view != null && newProgress == 100 && mIsForeLoad) {
-            // Finished fore load.
+          if (view != null && newProgress == 100 && !mHasForeLoaded.get()) {
+            // Page load finished
             mHasForeLoaded.set(true);
+            // Send load complete message
+            mHandler.sendEmptyMessage(HANDLE_FORE_LOAD_COMPLETE);
           }
         }
       });
@@ -251,6 +245,24 @@ public class BrowserDataManager {
     // Enable remote debugging via chrome://inspect
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
       WebView.setWebContentsDebuggingEnabled(true);
+    }
+  }
+
+  public boolean hasForeLoaded() {
+    return mHasForeLoaded.get();
+  }
+
+  public void showDialogOnPageFinished(Class<? extends BrowserDialogFragment> dialogClass,
+      FragmentManager fragmentManager) {
+    try {
+      mDialogFragment = dialogClass.newInstance();
+      Bundle bundle = new Bundle();
+      bundle.putInt(BrowserDialogFragment.EXTRA_DIALOG_SIZE, BrowserDialogFragment.MICRO);
+      mDialogFragment.setArguments(bundle);
+      mDialogFragment.show(fragmentManager, "foreLoad dialog");
+      assembleWebView(mDialogFragment.getBrowserContainer());
+    } catch (InstantiationException | IllegalAccessException e) {
+      Logger.e(TAG, "invoke showDialogOnPageFinished() failed, error: " + e.getMessage());
     }
   }
 }

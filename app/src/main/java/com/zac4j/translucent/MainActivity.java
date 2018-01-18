@@ -14,8 +14,8 @@ public class MainActivity extends AppCompatActivity {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.activity_main);
 
-    BrowserDataManager dataManager = BrowserDataManager.getInstance(getApplication());
-    dataManager.foreLoadUrl(URL);
+    BrowserManager browserManager = BrowserManager.getInstance(getApplicationContext());
+    browserManager.foreLoadUrl(URL);
     Logger.d(TAG, "fore load remote url data");
   }
 
