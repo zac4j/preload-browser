@@ -29,7 +29,6 @@ public class SecondaryActivity extends AppCompatActivity {
     super.onResume();
     Logger.d(TAG, "onResume: ");
     BrowserManager browserManager = BrowserManager.getInstance(getApplicationContext());
-    System.out.println("我日不走这");
     if (browserManager.hasForeLoaded()) {
       Logger.d(TAG, "hasForeLoaded");
       browserManager.showDialog(getSupportFragmentManager());

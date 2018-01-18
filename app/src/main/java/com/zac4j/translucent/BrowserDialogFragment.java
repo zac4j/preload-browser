@@ -1,6 +1,7 @@
 package com.zac4j.translucent;
 
 import android.annotation.SuppressLint;
+import android.content.DialogInterface;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -29,7 +30,18 @@ public class BrowserDialogFragment extends DialogFragment {
   public static final int MICRO = 0xbb;
 
   private int mSize = MICRO;
-  private View mRootView;
+
+  public interface OnLifecycleListener {
+    void onDialogShown();
+
+    void onDialogDismiss();
+  }
+
+  private OnLifecycleListener mLifecycleListener;
+
+  public void setOnLifecycleListener(OnLifecycleListener listener) {
+    mLifecycleListener = listener;
+  }
 
   public static BrowserDialogFragment newInstance(int size) {
     Bundle args = new Bundle();
@@ -50,15 +62,17 @@ public class BrowserDialogFragment extends DialogFragment {
   @SuppressLint("SetJavaScriptEnabled") @Nullable @Override
   public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
       @Nullable Bundle savedInstanceState) {
+    Logger.d(TAG, "Dialog onCreateView");
     return inflater.inflate(R.layout.fragment_dialog_fullscreen, container, false);
   }
 
   @Override public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
     super.onViewCreated(view, savedInstanceState);
-    mRootView = view;
+    Logger.d(TAG, "Dialog onViewCreated");
   }
 
   @Override public void onActivityCreated(Bundle savedInstanceState) {
+    Logger.d(TAG, "Dialog onActivityCreated");
     // 获取屏幕Window 对象
     super.onActivityCreated(savedInstanceState);
 
@@ -83,6 +97,13 @@ public class BrowserDialogFragment extends DialogFragment {
     window.setAttributes(params);
     // 底色为全透明
     window.setBackgroundDrawable(new ColorDrawable(0x00000000));
+
+    mLifecycleListener.onDialogShown();
+  }
+
+  @Override public void onDismiss(DialogInterface dialog) {
+    super.onDismiss(dialog);
+    mLifecycleListener.onDialogDismiss();
   }
 
   public void updateDialogSize(int size) {
@@ -103,6 +124,6 @@ public class BrowserDialogFragment extends DialogFragment {
   }
 
   public ViewGroup getBrowserContainer() {
-    return mRootView.findViewById(R.id.container);
+    return getView().findViewById(R.id.container);
   }
 }

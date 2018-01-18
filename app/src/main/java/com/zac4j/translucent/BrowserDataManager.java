@@ -68,8 +68,10 @@ public class BrowserDataManager {
             }
             break;
           case HANDLE_LOAD_DATA_TIMEOUT:
-            Logger.e(TAG, "Network connection time out,current loading progress is: "
-                + mWebView.getProgress());
+            if (mWebView != null) {
+              Logger.e(TAG, "Network connection time out,current loading progress is: "
+                  + mWebView.getProgress());
+            }
             break;
         }
       }
@@ -263,6 +265,35 @@ public class BrowserDataManager {
       assembleWebView(mDialogFragment.getBrowserContainer());
     } catch (InstantiationException | IllegalAccessException e) {
       Logger.e(TAG, "invoke showDialogOnPageFinished() failed, error: " + e.getMessage());
+    }
+  }
+
+  public void destroyWebView() {
+    if (mWebView != null) {
+      mWebView.clearHistory();
+
+      // NOTE: clears RAM cache, if you pass true, it will also clear the disk cache.
+      // Probably not a great idea to pass true if you have other WebViews still alive.
+      mWebView.clearCache(true);
+
+      // Loading a blank page is optional, but will ensure that the WebView isn't doing anything when you destroy it.
+      mWebView.loadUrl("about:blank");
+
+      mWebView.onPause();
+      mWebView.removeAllViews();
+      mWebView.destroyDrawingCache();
+
+      // NOTE: This pauses JavaScript execution for ALL WebViews,
+      // do not use if you have other WebViews still alive.
+      // If you create another WebView after calling this,
+      // make sure to call mWebView.resumeTimers().
+      mWebView.pauseTimers();
+
+      // NOTE: This can occasionally cause a segfault below API 17 (4.2)
+      mWebView.destroy();
+
+      // Null out the reference so that you don't end up re-using it.
+      mWebView = null;
     }
   }
 }

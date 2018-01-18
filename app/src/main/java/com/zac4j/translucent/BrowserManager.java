@@ -60,10 +60,18 @@ public class BrowserManager {
   }
 
   public void showDialog(FragmentManager fragmentManager) {
-    BrowserDialogFragment browserDialog =
+    final BrowserDialogFragment browserDialog =
         BrowserDialogFragment.newInstance(BrowserDialogFragment.FULLSCREEN);
     browserDialog.show(fragmentManager, TAG);
-    mDataManager.assembleWebView(browserDialog.getBrowserContainer());
+    browserDialog.setOnLifecycleListener(new BrowserDialogFragment.OnLifecycleListener() {
+      @Override public void onDialogShown() {
+        mDataManager.assembleWebView(browserDialog.getBrowserContainer());
+      }
+
+      @Override public void onDialogDismiss() {
+        mDataManager.destroyWebView();
+      }
+    });
   }
 
   public void showOnPageFinished(FragmentManager fragmentManager) {
