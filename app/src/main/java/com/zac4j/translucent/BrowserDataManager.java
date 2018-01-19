@@ -37,8 +37,8 @@ public class BrowserDataManager {
 
   private static final String TAG = BrowserDataManager.class.getSimpleName();
 
-  public static final int HANDLE_FORE_LOAD_COMPLETE = 0xff11;
-  public static final int HANDLE_LOAD_DATA_TIMEOUT = 0xff22;
+  public static final int HANDLE_LOAD_COMPLETE = 0xaa;
+  public static final int HANDLE_LOAD_TIMEOUT = 0xff;
 
   private static final int TIME_OUT_PROGRESS = 70;
   private static final int TIME_OUT_MILLIS = 3 * 1000;
@@ -46,28 +46,25 @@ public class BrowserDataManager {
   private WebView mWebView;
 
   // 是否已预加载
-  private AtomicBoolean mHasForeLoaded;
+  private AtomicBoolean mHasPreloaded;
   // Browser task handler
   private static BrowserHandler mHandler;
-  private BrowserDialogFragment mDialogFragment;
 
   public BrowserDataManager(final Context context) {
     prepareWebView(context);
-    mHasForeLoaded = new AtomicBoolean(false);
+    mHasPreloaded = new AtomicBoolean(false);
     mHandler = new BrowserHandler(context, Looper.getMainLooper()) {
-      @Override public void handleMessage(Message msg) {
+      @Override
+      public void handleMessage(Message msg) {
         if (msg == null) {
           return;
         }
 
         switch (msg.what) {
-          case HANDLE_FORE_LOAD_COMPLETE:
-            Logger.d(TAG, "Fore load complete.");
-            if (mDialogFragment != null) {
-              mDialogFragment.updateDialogSize(BrowserDialogFragment.FULLSCREEN);
-            }
+          case HANDLE_LOAD_COMPLETE:
+            Logger.d(TAG, "Preload complete.");
             break;
-          case HANDLE_LOAD_DATA_TIMEOUT:
+          case HANDLE_LOAD_TIMEOUT:
             if (mWebView != null) {
               Logger.e(TAG, "Network connection time out,current loading progress is: "
                   + mWebView.getProgress());
@@ -145,13 +142,15 @@ public class BrowserDataManager {
     try {
       webView.setWebViewClient(new WebViewClient() {
 
-        @Override public void onLoadResource(WebView view, String url) {
+        @Override
+        public void onLoadResource(WebView view, String url) {
 
           Logger.i(TAG, "onLoadResource url=" + url); // 开始加载
           super.onLoadResource(view, url);
         }
 
-        @Override public boolean shouldOverrideUrlLoading(WebView webview, String url) {
+        @Override
+        public boolean shouldOverrideUrlLoading(WebView webview, String url) {
 
           Logger.i(TAG, "intercept url=" + url);
           // 重写此方法表明点击网页里面的链接还是在当前的webview里跳转，不跳到浏览器那边
@@ -159,13 +158,15 @@ public class BrowserDataManager {
           return true;
         }
 
-        @Override public void onPageStarted(final WebView view, String url, Bitmap favicon) {
+        @Override
+        public void onPageStarted(final WebView view, String url, Bitmap favicon) {
           super.onPageStarted(view, url, favicon);
 
           mHandler.postDelayed(new Runnable() {
-            @Override public void run() {
+            @Override
+            public void run() {
               if (view.getProgress() < TIME_OUT_PROGRESS) {
-                mHandler.sendEmptyMessage(HANDLE_LOAD_DATA_TIMEOUT);
+                mHandler.sendEmptyMessage(HANDLE_LOAD_TIMEOUT);
               }
             }
           }, TIME_OUT_MILLIS);
@@ -173,28 +174,33 @@ public class BrowserDataManager {
           Logger.i(TAG, "onPageStarted: ");
         }
 
-        @Override public void onPageFinished(WebView view, String url) {
+        @Override
+        public void onPageFinished(WebView view, String url) {
 
           String title = view.getTitle(); // 得到网页标题
 
           Logger.e(TAG, "onPageFinished WebView title=" + title);
         }
 
-        @Override public void onReceivedError(WebView view, int errorCode, String description,
+        @Override
+        public void onReceivedError(WebView view, int errorCode, String description,
             String failingUrl) {
           Toast.makeText(view.getContext(), "加载错误", Toast.LENGTH_LONG).show();
         }
       });
 
       webView.setWebChromeClient(new WebChromeClient() {
-        @Override public void onProgressChanged(WebView view, int newProgress) {
+        @Override
+        public void onProgressChanged(WebView view, int newProgress) {
           super.onProgressChanged(view, newProgress);
           Logger.d(TAG, "onProgressChanged: " + newProgress);
-          if (view != null && newProgress == 100 && !mHasForeLoaded.get()) {
-            // Page load finished
-            mHasForeLoaded.set(true);
+          if (view != null && newProgress == 100) {
+            // Page load complete
+            if (!mHasPreloaded.get()) {
+              mHasPreloaded.set(true);
+            }
             // Send load complete message
-            mHandler.sendEmptyMessage(HANDLE_FORE_LOAD_COMPLETE);
+            mHandler.sendEmptyMessage(HANDLE_LOAD_COMPLETE);
           }
         }
       });
@@ -203,7 +209,8 @@ public class BrowserDataManager {
     }
   }
 
-  @SuppressLint("SetJavaScriptEnabled") private static void setupWebView(WebView webView) {
+  @SuppressLint("SetJavaScriptEnabled")
+  private static void setupWebView(WebView webView) {
     WebSettings settings = webView.getSettings();
     settings.setJavaScriptEnabled(true);
 
@@ -250,22 +257,8 @@ public class BrowserDataManager {
     }
   }
 
-  public boolean hasForeLoaded() {
-    return mHasForeLoaded.get();
-  }
-
-  public void showDialogOnPageFinished(Class<? extends BrowserDialogFragment> dialogClass,
-      FragmentManager fragmentManager) {
-    try {
-      mDialogFragment = dialogClass.newInstance();
-      Bundle bundle = new Bundle();
-      bundle.putInt(BrowserDialogFragment.EXTRA_DIALOG_SIZE, BrowserDialogFragment.MICRO);
-      mDialogFragment.setArguments(bundle);
-      mDialogFragment.show(fragmentManager, "foreLoad dialog");
-      assembleWebView(mDialogFragment.getBrowserContainer());
-    } catch (InstantiationException | IllegalAccessException e) {
-      Logger.e(TAG, "invoke showDialogOnPageFinished() failed, error: " + e.getMessage());
-    }
+  public boolean hasPreloaded() {
+    return mHasPreloaded.get();
   }
 
   public void destroyWebView() {

@@ -9,37 +9,34 @@ public class SecondaryActivity extends AppCompatActivity {
 
   private static final String TAG = SecondaryActivity.class.getSimpleName();
 
-  @Override public void onCreate(@Nullable Bundle savedInstanceState,
+  @Override
+  public void onCreate(@Nullable Bundle savedInstanceState,
       @Nullable PersistableBundle persistentState) {
     super.onCreate(savedInstanceState, persistentState);
     setContentView(R.layout.activity_secondary);
   }
 
-  @Override protected void onStart() {
+  @Override
+  protected void onStart() {
     super.onStart();
-    Logger.d(TAG, "onStart: ");
-  }
+    Logger.d(TAG, "onStart");
 
-  @Override protected void onRestart() {
-    Logger.d(TAG, "onRestart: ");
-    super.onRestart();
-  }
-
-  @Override protected void onResume() {
-    super.onResume();
-    Logger.d(TAG, "onResume: ");
     BrowserManager browserManager = BrowserManager.getInstance(getApplicationContext());
-    if (browserManager.hasForeLoaded()) {
-      Logger.d(TAG, "hasForeLoaded");
-      browserManager.showDialog(getSupportFragmentManager());
+
+    // Verify if browser manager has preload url.
+    if (browserManager.hasPreloaded()) {
+      Logger.d(TAG, "Web page has preload complete");
     } else {
-      Logger.d(TAG, "has not  Fore Loaded");
-      browserManager.showOnPageFinished(getSupportFragmentManager());
+      Logger.d(TAG, "Web page haven't load yet");
+      browserManager.loadUrl(Browser.URL);
     }
+
+    browserManager.showDialog(getSupportFragmentManager());
   }
 
-  @Override protected void onStop() {
-    Logger.d(TAG, "onStop: ");
-    super.onStop();
+  @Override
+  protected void onResume() {
+    super.onResume();
+    Logger.d(TAG, "onResume");
   }
 }

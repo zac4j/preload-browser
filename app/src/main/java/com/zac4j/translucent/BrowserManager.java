@@ -2,7 +2,6 @@ package com.zac4j.translucent;
 
 import android.content.Context;
 import android.support.v4.app.FragmentManager;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Helper class to manage Browser.
@@ -39,15 +38,15 @@ public class BrowserManager {
     mDataManager = new BrowserDataManager(context);
   }
 
-  public boolean hasForeLoaded() {
-    return mDataManager.hasForeLoaded();
+  public boolean hasPreloaded() {
+    return mDataManager.hasPreloaded();
   }
 
-  public void foreLoadUrl(String url) {
+  public void preloadUrl(String url) {
     if (Utils.isValidUrl(url)) {
       mDataManager.foreLoadUrl(url);
     } else {
-      throw new IllegalArgumentException("Invalid url");
+      throw new IllegalArgumentException("You shouldn't load url with an invalid url");
     }
   }
 
@@ -55,26 +54,23 @@ public class BrowserManager {
     if (Utils.isValidUrl(url)) {
       mDataManager.loadUrl(url);
     } else {
-      throw new IllegalArgumentException("Invalid url");
+      throw new IllegalArgumentException("You shouldn't load url with an invalid url");
     }
   }
 
   public void showDialog(FragmentManager fragmentManager) {
-    final BrowserDialogFragment browserDialog =
-        BrowserDialogFragment.newInstance(BrowserDialogFragment.FULLSCREEN);
+    final BrowserDialogFragment browserDialog = BrowserDialogFragment.newInstance();
     browserDialog.show(fragmentManager, TAG);
     browserDialog.setOnLifecycleListener(new BrowserDialogFragment.OnLifecycleListener() {
-      @Override public void onDialogShown() {
+      @Override
+      public void onDialogShown() {
         mDataManager.assembleWebView(browserDialog.getBrowserContainer());
       }
 
-      @Override public void onDialogDismiss() {
+      @Override
+      public void onDialogDismiss() {
         mDataManager.destroyWebView();
       }
     });
-  }
-
-  public void showOnPageFinished(FragmentManager fragmentManager) {
-    mDataManager.showDialogOnPageFinished(BrowserDialogFragment.class, fragmentManager);
   }
 }
