@@ -1,4 +1,4 @@
-package com.zac4j.translucent;
+package com.zac4j.web.browser;
 
 import android.content.Context;
 import android.os.Handler;

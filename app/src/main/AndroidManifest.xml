@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.zac4j.translucent">
+    package="com.zac4j.web">
 
   <uses-permission android:name="android.permission.INTERNET"/>
   <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
@@ -17,14 +17,14 @@
         android:name="junhapptgset"
         android:value="sksha988sa9sja1"/>
 
-    <activity android:name="com.zac4j.translucent.MainActivity">
+    <activity android:name="com.zac4j.web.ui.MainActivity">
       <intent-filter>
         <action android:name="android.intent.action.MAIN"/>
 
         <category android:name="android.intent.category.LAUNCHER"/>
       </intent-filter>
     </activity>
-    <activity android:name="com.zac4j.translucent.SecondaryActivity"/>
+    <activity android:name="com.zac4j.web.ui.SecondaryActivity"/>
   </application>
 
 </manifest>

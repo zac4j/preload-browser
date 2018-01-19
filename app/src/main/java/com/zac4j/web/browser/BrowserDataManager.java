@@ -1,19 +1,12 @@
-package com.zac4j.translucent;
+package com.zac4j.web.browser;
 
 import android.annotation.SuppressLint;
-import android.app.Application;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.os.Build;
-import android.os.Bundle;
-import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
-import android.support.v4.app.DialogFragment;
-import android.support.v4.app.FragmentManager;
-import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.webkit.WebChromeClient;
@@ -24,6 +17,9 @@ import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
+import com.zac4j.web.Logger;
+import com.zac4j.web.Utils;
+import com.zac4j.web.router.UrlRouter;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -33,24 +29,27 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * Created by Zaccc on 2017/12/7.
  */
 
-public class BrowserDataManager {
+class BrowserDataManager {
 
   private static final String TAG = BrowserDataManager.class.getSimpleName();
 
-  public static final int HANDLE_LOAD_COMPLETE = 0xaa;
-  public static final int HANDLE_LOAD_TIMEOUT = 0xff;
+  private static final int HANDLE_LOAD_COMPLETE = 0xaa;
+  private static final int HANDLE_LOAD_TIMEOUT = 0xff;
 
-  private static final int TIME_OUT_PROGRESS = 70;
-  private static final int TIME_OUT_MILLIS = 3 * 1000;
+  // WebView timeout spec.
+  private static final int TIME_OUT_PROGRESS = 50;
+  private static final long TIME_OUT_MILLIS = 3 * 1000L;
 
   private WebView mWebView;
 
-  // 是否已预加载
+  // If preload complete.
   private AtomicBoolean mHasPreloaded;
   // Browser task handler
   private static BrowserHandler mHandler;
 
-  public BrowserDataManager(final Context context) {
+  private UrlRouter mUrlRouter;
+
+  BrowserDataManager(final Context context) {
     prepareWebView(context);
     mHasPreloaded = new AtomicBoolean(false);
     mHandler = new BrowserHandler(context, Looper.getMainLooper()) {
@@ -59,7 +58,6 @@ public class BrowserDataManager {
         if (msg == null) {
           return;
         }
-
         switch (msg.what) {
           case HANDLE_LOAD_COMPLETE:
             Logger.d(TAG, "Preload complete.");
@@ -76,28 +74,28 @@ public class BrowserDataManager {
   }
 
   /**
-   * Load url data before display ui.
+   * Preload given url in Browser WebView.
    *
-   * @param url URL for load.
+   * @param url given url to load.
    */
-  public void foreLoadUrl(String url) {
+  void preloadUrl(String url) {
 
-    if (mWebView == null || TextUtils.isEmpty(url)) {
-      return;
+    if (mWebView == null) {
+      throw new IllegalStateException("You should initialize BrowserManager before preload url.");
     }
 
     loadUrl(url);
   }
 
   /**
-   * Load remote url
+   * Load given url in Browser WebView.
    *
-   * @param url remote url
+   * @param url given url to load.
    */
-  public void loadUrl(String url) {
+  void loadUrl(String url) {
 
-    if (mWebView == null || TextUtils.isEmpty(url)) {
-      return;
+    if (mWebView == null) {
+      throw new IllegalStateException("You should initialize BrowserManager before preload url.");
     }
 
     try {
@@ -115,13 +113,33 @@ public class BrowserDataManager {
    */
   private void prepareWebView(Context context) {
     mWebView = new WebView(context);
-
-    setupWebView(mWebView);
-
-    addBrowserClient(mWebView);
   }
 
-  public void assembleWebView(ViewGroup container) {
+  /**
+   * Set up WebView default settings & clients
+   *
+   * @param webView WebView to set up default settings.
+   */
+  void setupWebViewWithDefaults(WebView webView) {
+    setWebViewSettings(webView);
+    setBrowserClients(webView);
+  }
+
+  /**
+   * Provide WebView instance.
+   *
+   * @return WebView instance.
+   */
+  WebView getWebView() {
+    return mWebView;
+  }
+
+  /**
+   * Assemble WebView into WebView container
+   *
+   * @param container WebView container
+   */
+  void assembleWebView(ViewGroup container) {
     ViewGroup.LayoutParams params = new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
         ViewGroup.LayoutParams.MATCH_PARENT);
     if (container instanceof FrameLayout) {
@@ -138,23 +156,47 @@ public class BrowserDataManager {
     container.addView(mWebView);
   }
 
-  private void addBrowserClient(WebView webView) {
+  /**
+   * Remove WebView from WebView container
+   *
+   * @param container WebView container
+   */
+  void removeWebView(ViewGroup container) {
+    container.removeAllViews();
+  }
+
+  void addUrlRouter(UrlRouter router) {
+    mUrlRouter = router;
+  }
+
+  /**
+   * Set WebView's WebViewClient and WebChromeClient.
+   *
+   * @param webView WebView to set up client.
+   */
+  void setBrowserClients(WebView webView) {
     try {
       webView.setWebViewClient(new WebViewClient() {
 
         @Override
-        public void onLoadResource(WebView view, String url) {
-
-          Logger.i(TAG, "onLoadResource url=" + url); // 开始加载
-          super.onLoadResource(view, url);
-        }
-
-        @Override
         public boolean shouldOverrideUrlLoading(WebView webview, String url) {
 
-          Logger.i(TAG, "intercept url=" + url);
-          // 重写此方法表明点击网页里面的链接还是在当前的webview里跳转，不跳到浏览器那边
-          webview.loadUrl(url);
+          Logger.i(TAG, "shouldOverrideUrlLoading intercept url: " + url);
+
+          boolean routingResult;
+          if (mUrlRouter == null) {
+            webview.loadUrl(url);
+            return true;
+          } else {
+            routingResult = mUrlRouter.route(url);
+          }
+
+          if (routingResult) {
+            Logger.d(TAG, "Router has consumed intercept url");
+            return true;
+          } else {
+            webview.loadUrl(url);
+          }
           return true;
         }
 
@@ -165,7 +207,7 @@ public class BrowserDataManager {
           mHandler.postDelayed(new Runnable() {
             @Override
             public void run() {
-              if (view.getProgress() < TIME_OUT_PROGRESS) {
+              if (view != null && view.getProgress() < TIME_OUT_PROGRESS) {
                 mHandler.sendEmptyMessage(HANDLE_LOAD_TIMEOUT);
               }
             }
@@ -176,8 +218,7 @@ public class BrowserDataManager {
 
         @Override
         public void onPageFinished(WebView view, String url) {
-
-          String title = view.getTitle(); // 得到网页标题
+          String title = view.getTitle(); // Get page title
 
           Logger.e(TAG, "onPageFinished WebView title=" + title);
         }
@@ -185,7 +226,8 @@ public class BrowserDataManager {
         @Override
         public void onReceivedError(WebView view, int errorCode, String description,
             String failingUrl) {
-          Toast.makeText(view.getContext(), "加载错误", Toast.LENGTH_LONG).show();
+          Toast.makeText(view.getContext(), "Load failed with error: " + description,
+              Toast.LENGTH_LONG).show();
         }
       });
 
@@ -209,8 +251,8 @@ public class BrowserDataManager {
     }
   }
 
-  @SuppressLint("SetJavaScriptEnabled")
-  private static void setupWebView(WebView webView) {
+  @SuppressLint({ "SetJavaScriptEnabled", "ObsoleteSdkInt" })
+  void setWebViewSettings(WebView webView) {
     WebSettings settings = webView.getSettings();
     settings.setJavaScriptEnabled(true);
 
@@ -224,7 +266,7 @@ public class BrowserDataManager {
     settings.setTextZoom(100);
     webView.setScrollBarStyle(View.SCROLLBARS_OUTSIDE_OVERLAY);
 
-    // WebView 的访问、存储、缓存设置
+    // WebView content access, cache, storage.
     settings.setAllowContentAccess(true);
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
       settings.setAllowUniversalAccessFromFileURLs(true);
@@ -235,7 +277,6 @@ public class BrowserDataManager {
     settings.setAppCachePath(cachePath);
     settings.setCacheMode(WebSettings.LOAD_DEFAULT);
     settings.setDomStorageEnabled(true);
-    settings.setSavePassword(false);
     settings.setDatabaseEnabled(true);
     // Enable record location info
     settings.setGeolocationEnabled(true);
@@ -257,11 +298,11 @@ public class BrowserDataManager {
     }
   }
 
-  public boolean hasPreloaded() {
+  boolean hasPreloaded() {
     return mHasPreloaded.get();
   }
 
-  public void destroyWebView() {
+  void destroyWebView() {
     if (mWebView != null) {
       mWebView.clearHistory();
 

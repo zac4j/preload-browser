@@ -1,4 +1,4 @@
-package com.zac4j.translucent;
+package com.zac4j.web;
 
 import android.util.Log;
 

@@ -1,9 +1,13 @@
-package com.zac4j.translucent;
+package com.zac4j.web.ui;
 
 import android.os.Bundle;
 import android.os.PersistableBundle;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
+import com.zac4j.web.Logger;
+import com.zac4j.web.R;
+import com.zac4j.web.browser.Browser;
+import com.zac4j.web.browser.BrowserManager;
 
 public class SecondaryActivity extends AppCompatActivity {
 
@@ -21,7 +25,7 @@ public class SecondaryActivity extends AppCompatActivity {
     super.onStart();
     Logger.d(TAG, "onStart");
 
-    BrowserManager browserManager = BrowserManager.getInstance(getApplicationContext());
+    final BrowserManager browserManager = BrowserManager.getInstance(getApplicationContext());
 
     // Verify if browser manager has preload url.
     if (browserManager.hasPreloaded()) {
@@ -31,7 +35,7 @@ public class SecondaryActivity extends AppCompatActivity {
       browserManager.loadUrl(Browser.URL);
     }
 
-    browserManager.showDialog(getSupportFragmentManager());
+    browserManager.showDialog(getSupportFragmentManager(), RedPacketDialogFragment.class);
   }
 
   @Override

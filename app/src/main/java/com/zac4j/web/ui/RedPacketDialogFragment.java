@@ -1,4 +1,4 @@
-package com.zac4j.translucent;
+package com.zac4j.web.ui;
 
 import android.annotation.SuppressLint;
 import android.content.DialogInterface;
@@ -7,38 +7,23 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.DialogFragment;
-import android.support.v4.app.FragmentManager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
-import android.widget.FrameLayout;
+import com.zac4j.web.Logger;
+import com.zac4j.web.R;
+import com.zac4j.web.browser.BrowserDialogFragment;
 
 /**
  * A fullscreen webView dialog fragment
  * Created by Zaccc on 11/20/2017.
  */
 
-public class BrowserDialogFragment extends DialogFragment {
+public class RedPacketDialogFragment extends BrowserDialogFragment {
 
-  private static final String TAG = BrowserDialogFragment.class.getSimpleName();
-
-  public interface OnLifecycleListener {
-    void onDialogShown();
-
-    void onDialogDismiss();
-  }
-
-  private OnLifecycleListener mLifecycleListener;
-
-  public void setOnLifecycleListener(OnLifecycleListener listener) {
-    mLifecycleListener = listener;
-  }
-
-  public static BrowserDialogFragment newInstance() {
-    return new BrowserDialogFragment();
-  }
+  private static final String TAG = RedPacketDialogFragment.class.getSimpleName();
 
   @SuppressLint("SetJavaScriptEnabled")
   @Nullable
@@ -50,22 +35,19 @@ public class BrowserDialogFragment extends DialogFragment {
   }
 
   @Override
-  public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-    super.onViewCreated(view, savedInstanceState);
-    Logger.d(TAG, "Dialog onViewCreated");
-  }
-
-  @Override
   public void onActivityCreated(Bundle savedInstanceState) {
     Logger.d(TAG, "Dialog onActivityCreated");
-    // 获取屏幕Window 对象
-    super.onActivityCreated(savedInstanceState);
 
+    // 获取屏幕Window 对象
     Window window = getDialog().getWindow();
 
     if (window == null) {
+      super.onActivityCreated(savedInstanceState);
       return;
     }
+
+    window.requestFeature(Window.FEATURE_NO_TITLE);
+    super.onActivityCreated(savedInstanceState);
 
     // 全屏展示Dialog
     window.setLayout(WindowManager.LayoutParams.MATCH_PARENT,
@@ -77,16 +59,14 @@ public class BrowserDialogFragment extends DialogFragment {
     window.setAttributes(params);
     // 底色为全透明
     window.setBackgroundDrawable(new ColorDrawable(0x00000000));
-
-    mLifecycleListener.onDialogShown();
   }
 
   @Override
   public void onDismiss(DialogInterface dialog) {
     super.onDismiss(dialog);
-    mLifecycleListener.onDialogDismiss();
   }
 
+  @Override
   public ViewGroup getBrowserContainer() {
     if (getView() != null) {
       return getView().findViewById(R.id.container);
