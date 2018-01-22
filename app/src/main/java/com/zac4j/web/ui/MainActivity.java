@@ -15,16 +15,26 @@ import com.zac4j.web.router.UrlRouter;
 public class MainActivity extends AppCompatActivity {
 
   private static final String TAG = MainActivity.class.getSimpleName();
+  private BrowserManager mBrowserManager;
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.activity_main);
+  }
+
+  @Override
+  protected void onStart() {
+    Logger.d(TAG, "onStart");
+    super.onStart();
 
     Logger.d(TAG, "Preload url in Main Activity");
-    final BrowserManager browserManager = BrowserManager.getInstance(getApplicationContext());
-    browserManager.preloadUrl(Browser.URL);
-    browserManager.addUrlRouter(new UrlRouter() {
+    // Step one: get BrowserManager instance
+    mBrowserManager = BrowserManager.getInstance(getApplicationContext());
+    // Step two: set url to preload data
+    mBrowserManager.preloadUrl(Browser.URL);
+    // Step three: add intercept scheme in the WebViewClient::shouldOverrideUrlLoading url route specification.
+    mBrowserManager.addUrlRouter(new UrlRouter() {
       @Override
       public boolean route(String scheme) {
 
@@ -33,20 +43,28 @@ public class MainActivity extends AppCompatActivity {
         }
 
         if (scheme.contains("gtjayyz://jumpfunc")) {
-          Toast.makeText(MainActivity.this, "You opened the RadPacket!", Toast.LENGTH_SHORT).show();
+          Toast.makeText(MainActivity.this, "Nice, You open this RadPacket!", Toast.LENGTH_SHORT)
+              .show();
           return true;
         } else if (scheme.contains("gtjanormal://activityClose")) {
-          browserManager.closeDialog();
+          mBrowserManager.closeDialog();
           return true;
         }
 
         return false;
       }
     });
-    browserManager.setupWebViewWithDefaults();
+    // Step four: set WebView instance settings, you can modify it urself by invoke BrowserManager.getWebView.
+    mBrowserManager.setupWebViewWithDefaults();
   }
 
   public void getPacket(View view) {
     startActivity(new Intent(MainActivity.this, SecondaryActivity.class));
+  }
+
+  @Override
+  protected void onDestroy() {
+    Logger.d(TAG, "onDestroy");
+    super.onDestroy();
   }
 }

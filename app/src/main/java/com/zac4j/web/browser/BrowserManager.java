@@ -146,4 +146,14 @@ public class BrowserManager {
       mBrowserDialog.dismiss();
     }
   }
+
+  /**
+   * Destroy WebView
+   */
+  public void destroyWebView() {
+    if (getWebView() != null) {
+      mDataManager.destroyWebView();
+    }
+  }
+
 }

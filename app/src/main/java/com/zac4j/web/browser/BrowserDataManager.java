@@ -40,6 +40,7 @@ class BrowserDataManager {
   private static final int TIME_OUT_PROGRESS = 50;
   private static final long TIME_OUT_MILLIS = 3 * 1000L;
 
+  private Context mAppContext;
   private WebView mWebView;
 
   // If preload complete.
@@ -80,8 +81,8 @@ class BrowserDataManager {
    */
   void preloadUrl(String url) {
 
-    if (mWebView == null) {
-      throw new IllegalStateException("You should initialize BrowserManager before preload url.");
+    if (mWebView == null && mAppContext != null) {
+      prepareWebView(mAppContext);
     }
 
     loadUrl(url);
@@ -95,7 +96,7 @@ class BrowserDataManager {
   void loadUrl(String url) {
 
     if (mWebView == null) {
-      throw new IllegalStateException("You should initialize BrowserManager before preload url.");
+      throw new IllegalStateException("You should initialize BrowserManager before load url.");
     }
 
     try {

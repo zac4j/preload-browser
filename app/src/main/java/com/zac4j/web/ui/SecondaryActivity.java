@@ -12,6 +12,7 @@ import com.zac4j.web.browser.BrowserManager;
 public class SecondaryActivity extends AppCompatActivity {
 
   private static final String TAG = SecondaryActivity.class.getSimpleName();
+  private BrowserManager mBrowserManager;
 
   @Override
   public void onCreate(@Nullable Bundle savedInstanceState,
@@ -25,22 +26,23 @@ public class SecondaryActivity extends AppCompatActivity {
     super.onStart();
     Logger.d(TAG, "onStart");
 
-    final BrowserManager browserManager = BrowserManager.getInstance(getApplicationContext());
+    mBrowserManager = BrowserManager.getInstance(getApplicationContext());
 
     // Verify if browser manager has preload complete.
-    if (browserManager.hasPreloadComplete()) {
+    if (mBrowserManager.hasPreloadComplete()) {
       Logger.d(TAG, "Web page has preload complete");
     } else {
       Logger.d(TAG, "Web page haven't load yet");
-      browserManager.loadUrl(Browser.URL);
+      mBrowserManager.loadUrl(Browser.URL);
     }
 
-    browserManager.showDialog(getSupportFragmentManager(), RedPacketDialogFragment.class);
+    mBrowserManager.showDialog(getSupportFragmentManager(), RedPacketDialogFragment.class);
   }
 
   @Override
-  protected void onResume() {
-    super.onResume();
-    Logger.d(TAG, "onResume");
+  protected void onDestroy() {
+    Logger.d(TAG, "onDestroy");
+    mBrowserManager.destroyWebView();
+    super.onDestroy();
   }
 }
