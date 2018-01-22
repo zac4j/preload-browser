@@ -298,7 +298,7 @@ class BrowserDataManager {
     }
   }
 
-  boolean hasPreloaded() {
+  boolean hasPreloadComplete() {
     return mHasPreloaded.get();
   }
 

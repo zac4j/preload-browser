@@ -27,8 +27,8 @@ public class SecondaryActivity extends AppCompatActivity {
 
     final BrowserManager browserManager = BrowserManager.getInstance(getApplicationContext());
 
-    // Verify if browser manager has preload url.
-    if (browserManager.hasPreloaded()) {
+    // Verify if browser manager has preload complete.
+    if (browserManager.hasPreloadComplete()) {
       Logger.d(TAG, "Web page has preload complete");
     } else {
       Logger.d(TAG, "Web page haven't load yet");

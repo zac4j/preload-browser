@@ -17,7 +17,7 @@ import com.zac4j.web.R;
 import com.zac4j.web.browser.BrowserDialogFragment;
 
 /**
- * A fullscreen webView dialog fragment
+ * A fullscreen WebView dialog fragment
  * Created by Zaccc on 11/20/2017.
  */
 

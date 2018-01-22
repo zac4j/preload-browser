@@ -32,21 +32,21 @@ public class MainActivity extends AppCompatActivity {
           return false;
         }
 
-        switch (scheme) {
-          case "gtjayyz://jumpfunc":
-            Toast.makeText(MainActivity.this, "wtf", Toast.LENGTH_SHORT).show();
-            return true;
-          case "gtjanormal://activityClose":
-            browserManager.closeDialog();
-            return true;
+        if (scheme.contains("gtjayyz://jumpfunc")) {
+          Toast.makeText(MainActivity.this, "You opened the RadPacket!", Toast.LENGTH_SHORT).show();
+          return true;
+        } else if (scheme.contains("gtjanormal://activityClose")) {
+          browserManager.closeDialog();
+          return true;
         }
+
         return false;
       }
     });
     browserManager.setupWebViewWithDefaults();
   }
 
-  public void jump(View view) {
+  public void getPacket(View view) {
     startActivity(new Intent(MainActivity.this, SecondaryActivity.class));
   }
 }
