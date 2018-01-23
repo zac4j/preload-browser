@@ -81,8 +81,8 @@ class BrowserDataManager {
    */
   void preloadUrl(String url) {
 
-    if (mWebView == null && mAppContext != null) {
-      prepareWebView(mAppContext);
+    if (mWebView == null) {
+      throw new IllegalStateException("You should initialize BrowserManager before load url.");
     }
 
     loadUrl(url);
@@ -204,7 +204,7 @@ class BrowserDataManager {
         @Override
         public void onPageStarted(final WebView view, String url, Bitmap favicon) {
           super.onPageStarted(view, url, favicon);
-
+          // Handle WebView loading timeout problem.
           mHandler.postDelayed(new Runnable() {
             @Override
             public void run() {
@@ -257,8 +257,6 @@ class BrowserDataManager {
     WebSettings settings = webView.getSettings();
     settings.setJavaScriptEnabled(true);
 
-    settings.setCacheMode(WebSettings.LOAD_CACHE_ELSE_NETWORK);
-
     // UI display
     settings.setUseWideViewPort(true);
     settings.setLoadWithOverviewMode(true);
@@ -273,14 +271,14 @@ class BrowserDataManager {
       settings.setAllowUniversalAccessFromFileURLs(true);
     }
 
-    String cachePath = webView.getContext().getDir("webView_cache", Context.MODE_PRIVATE).getPath();
+    if (Utils.isNetworkAvailable(mAppContext)) {
+      settings.setCacheMode(WebSettings.LOAD_DEFAULT);
+    } else {
+      settings.setCacheMode(WebSettings.LOAD_CACHE_ELSE_NETWORK);
+    }
     settings.setAppCacheEnabled(true);
-    settings.setAppCachePath(cachePath);
-    settings.setCacheMode(WebSettings.LOAD_DEFAULT);
     settings.setDomStorageEnabled(true);
     settings.setDatabaseEnabled(true);
-    // Enable record location info
-    settings.setGeolocationEnabled(true);
 
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN_MR1) {
       webView.removeJavascriptInterface("searchBoxJavaBridge_");
@@ -301,6 +299,19 @@ class BrowserDataManager {
 
   boolean hasPreloadComplete() {
     return mHasPreloaded.get();
+  }
+
+  void clearWebView() {
+    if (mWebView != null) {
+      mWebView.clearHistory();
+
+      // NOTE: clears RAM cache, if you pass true, it will also clear the disk cache.
+      // Probably not a great idea to pass true if you have other WebViews still alive.
+      mWebView.clearCache(true);
+
+      // Loading a blank page is optional, but will ensure that the WebView isn't doing anything when you destroy it.
+      mWebView.loadUrl("about:blank");
+    }
   }
 
   void destroyWebView() {

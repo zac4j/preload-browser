@@ -38,11 +38,4 @@ public class SecondaryActivity extends AppCompatActivity {
 
     mBrowserManager.showDialog(getSupportFragmentManager(), RedPacketDialogFragment.class);
   }
-
-  @Override
-  protected void onDestroy() {
-    Logger.d(TAG, "onDestroy");
-    mBrowserManager.destroyWebView();
-    super.onDestroy();
-  }
 }

@@ -6,6 +6,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
 import android.view.View;
 import android.widget.Toast;
+import com.zac4j.web.AppLifecycleService;
 import com.zac4j.web.Logger;
 import com.zac4j.web.R;
 import com.zac4j.web.browser.Browser;
@@ -21,6 +22,9 @@ public class MainActivity extends AppCompatActivity {
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.activity_main);
+
+    // Start service to detect app lifecycle.
+    startService(new Intent(getBaseContext(), AppLifecycleService.class));
   }
 
   @Override
@@ -65,6 +69,7 @@ public class MainActivity extends AppCompatActivity {
   @Override
   protected void onDestroy() {
     Logger.d(TAG, "onDestroy");
+    mBrowserManager.clearWebView();
     super.onDestroy();
   }
 }

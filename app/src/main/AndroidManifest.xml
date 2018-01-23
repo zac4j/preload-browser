@@ -4,6 +4,7 @@
 
   <uses-permission android:name="android.permission.INTERNET"/>
   <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+  <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
 
   <application
       android:allowBackup="true"
@@ -13,10 +14,6 @@
       android:supportsRtl="true"
       android:theme="@style/AppTheme">
 
-    <meta-data
-        android:name="junhapptgset"
-        android:value="sksha988sa9sja1"/>
-
     <activity android:name="com.zac4j.web.ui.MainActivity">
       <intent-filter>
         <action android:name="android.intent.action.MAIN"/>
@@ -25,6 +22,11 @@
       </intent-filter>
     </activity>
     <activity android:name="com.zac4j.web.ui.SecondaryActivity"/>
+
+    <service
+        android:name="com.zac4j.web.AppLifecycleService"
+        android:stopWithTask="false"/>
+
   </application>
 
 </manifest>

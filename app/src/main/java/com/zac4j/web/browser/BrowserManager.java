@@ -148,6 +148,15 @@ public class BrowserManager {
   }
 
   /**
+   * Clear WebView
+   */
+  public void clearWebView() {
+    if (getWebView() != null) {
+      mDataManager.clearWebView();
+    }
+  }
+
+  /**
    * Destroy WebView
    */
   public void destroyWebView() {
@@ -155,5 +164,4 @@ public class BrowserManager {
       mDataManager.destroyWebView();
     }
   }
-
 }
