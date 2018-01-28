@@ -32,6 +32,20 @@ public class MainActivity extends AppCompatActivity {
     Logger.d(TAG, "onStart");
     super.onStart();
 
+    preload();
+  }
+
+  @Override
+  protected void onDestroy() {
+    Logger.d(TAG, "onDestroy");
+    super.onDestroy();
+  }
+
+  public void getPacket(View view) {
+    startActivity(new Intent(MainActivity.this, SecondaryActivity.class));
+  }
+
+  private void preload() {
     Logger.d(TAG, "Preload url in Main Activity");
     // Step one: get BrowserManager instance
     mBrowserManager = BrowserManager.getInstance(getApplicationContext());
@@ -46,11 +60,11 @@ public class MainActivity extends AppCompatActivity {
           return false;
         }
 
-        if (scheme.contains("gtjayyz://jumpfunc")) {
+        if (scheme.contains(Browser.OPEN_RED_PACKET)) {
           Toast.makeText(MainActivity.this, "Nice, You open this RadPacket!", Toast.LENGTH_SHORT)
               .show();
           return true;
-        } else if (scheme.contains("gtjanormal://activityClose")) {
+        } else if (scheme.contains(Browser.CLOSE_RED_PACKET)) {
           mBrowserManager.closeDialog();
           return true;
         }
@@ -62,14 +76,4 @@ public class MainActivity extends AppCompatActivity {
     mBrowserManager.setupWebViewWithDefaults();
   }
 
-  public void getPacket(View view) {
-    startActivity(new Intent(MainActivity.this, SecondaryActivity.class));
-  }
-
-  @Override
-  protected void onDestroy() {
-    Logger.d(TAG, "onDestroy");
-    mBrowserManager.clearWebView();
-    super.onDestroy();
-  }
 }
