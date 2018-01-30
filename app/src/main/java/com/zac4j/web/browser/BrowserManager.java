@@ -77,8 +77,8 @@ public class BrowserManager {
    *
    * @return true if preload complete, otherwise false.
    */
-  public boolean hasPreloadComplete() {
-    return mDataManager.hasPreloadComplete();
+  public boolean isPreloadComplete() {
+    return mDataManager.isPreloadComplete();
   }
 
   /**

@@ -28,12 +28,14 @@ public class SecondaryActivity extends AppCompatActivity {
 
     mBrowserManager = BrowserManager.getInstance(getApplicationContext());
 
-    // Verify if browser manager has preload complete.
-    if (mBrowserManager.hasPreloadComplete()) {
+    // Verify if browser manager preload data complete.
+    if (mBrowserManager.isPreloadComplete()) {
       Logger.d(TAG, "Web page has preload complete");
     } else {
       Logger.d(TAG, "Web page haven't load yet");
       mBrowserManager.loadUrl(Browser.URL);
+      // Don't forget setup WebView settings
+      mBrowserManager.setupWebViewWithDefaults();
     }
 
     mBrowserManager.showDialog(getSupportFragmentManager(), RedPacketDialogFragment.class);

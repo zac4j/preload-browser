@@ -52,6 +52,7 @@ class BrowserDataManager {
 
   BrowserDataManager(final Context context) {
     prepareWebView(context);
+    mAppContext = context;
     mHasPreloaded = new AtomicBoolean(false);
     mHandler = new BrowserHandler(context, Looper.getMainLooper()) {
       @Override
@@ -297,7 +298,7 @@ class BrowserDataManager {
     }
   }
 
-  boolean hasPreloadComplete() {
+  boolean isPreloadComplete() {
     return mHasPreloaded.get();
   }
 

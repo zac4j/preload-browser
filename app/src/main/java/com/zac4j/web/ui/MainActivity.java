@@ -60,11 +60,11 @@ public class MainActivity extends AppCompatActivity {
           return false;
         }
 
-        if (scheme.contains(Browser.OPEN_RED_PACKET)) {
-          Toast.makeText(MainActivity.this, "Nice, You open this RadPacket!", Toast.LENGTH_SHORT)
+        if (scheme.startsWith(Browser.OPEN_RED_PACKET)) {
+          Toast.makeText(MainActivity.this, "Nice, You open this RedPacket!", Toast.LENGTH_SHORT)
               .show();
           return true;
-        } else if (scheme.contains(Browser.CLOSE_RED_PACKET)) {
+        } else if (scheme.startsWith(Browser.CLOSE_RED_PACKET)) {
           mBrowserManager.closeDialog();
           return true;
         }
