@@ -4,9 +4,9 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.os.Build;
+import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
-import android.text.TextUtils;
 import android.view.View;
 import android.view.ViewGroup;
 import android.webkit.WebChromeClient;
@@ -33,8 +33,9 @@ class BrowserDataManager {
 
   private static final String TAG = BrowserDataManager.class.getSimpleName();
 
-  private static final int HANDLE_LOAD_COMPLETE = 0xaa;
-  private static final int HANDLE_LOAD_TIMEOUT = 0xff;
+  private static final int MSG_LOAD_COMPLETE = 0xaa;
+  private static final int MSG_LOAD_TIMEOUT = 0xbb;
+  private static final int MSG_LOAD_FAILED = 0xcc;
 
   // WebView timeout spec.
   private static final int TIME_OUT_PROGRESS = 50;
@@ -45,34 +46,59 @@ class BrowserDataManager {
 
   // If preload complete.
   private AtomicBoolean mHasPreloaded;
-  // Browser task handler
-  private static BrowserHandler mHandler;
-
+  // Browser event handler
+  private Handler mHandler;
+  // Browser url route spec.
   private UrlRouter mUrlRouter;
+
+  private OnLoadStateListener mOnLoadStateListener;
+
+  public interface OnLoadStateListener {
+
+    void onLoadComplete();
+
+    void onLoadFailed(int errorCode, String description);
+  }
 
   BrowserDataManager(final Context context) {
     prepareWebView(context);
     mAppContext = context;
     mHasPreloaded = new AtomicBoolean(false);
-    mHandler = new BrowserHandler(context, Looper.getMainLooper()) {
-      @Override
-      public void handleMessage(Message msg) {
-        if (msg == null) {
-          return;
-        }
-        switch (msg.what) {
-          case HANDLE_LOAD_COMPLETE:
-            Logger.d(TAG, "Preload complete.");
-            break;
-          case HANDLE_LOAD_TIMEOUT:
-            if (mWebView != null) {
-              Logger.e(TAG, "Network connection time out,current loading progress is: "
-                  + mWebView.getProgress());
-            }
-            break;
-        }
-      }
-    };
+    mHandler = new Handler();
+  }
+
+  /**
+   * Registers a listener that will receive callbacks when a load is canceled.
+   * The callback will be called on the process's main thread so it's safe to
+   * pass the results to widgets.
+   *
+   * Must be called from the process's main thread.
+   *
+   * @param listener The listener to register.
+   */
+  public void registerOnLoadStateListener(OnLoadStateListener listener) {
+    if (mOnLoadStateListener != null) {
+      throw new IllegalStateException("There is already a listener registered");
+    }
+    mOnLoadStateListener = listener;
+  }
+
+  /**
+   * Unregisters a listener that was previously added with
+   * {@link #registerOnLoadStateListener}.
+   *
+   * Must be called from the process's main thread.
+   *
+   * @param listener The listener to unregister.
+   */
+  public void unregisterOnLoadStateListener(OnLoadStateListener listener) {
+    if (mOnLoadStateListener == null) {
+      throw new IllegalStateException("No listener register");
+    }
+    if (mOnLoadStateListener != listener) {
+      throw new IllegalArgumentException("Attempting to unregister the wrong listener");
+    }
+    mOnLoadStateListener = null;
   }
 
   /**
@@ -183,7 +209,7 @@ class BrowserDataManager {
         @Override
         public boolean shouldOverrideUrlLoading(WebView webview, String url) {
 
-          Logger.i(TAG, "shouldOverrideUrlLoading intercept url: " + url);
+          Logger.d(TAG, "shouldOverrideUrlLoading intercept url: " + url);
 
           boolean routingResult;
           if (mUrlRouter == null) {
@@ -205,29 +231,31 @@ class BrowserDataManager {
         @Override
         public void onPageStarted(final WebView view, String url, Bitmap favicon) {
           super.onPageStarted(view, url, favicon);
+          Logger.d(TAG, "onPageStarted: ");
           // Handle WebView loading timeout problem.
-          mHandler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-              if (view != null && view.getProgress() < TIME_OUT_PROGRESS) {
-                mHandler.sendEmptyMessage(HANDLE_LOAD_TIMEOUT);
+          if (mHandler != null) {
+            mHandler.postDelayed(new Runnable() {
+              @Override
+              public void run() {
+                if (view != null && view.getProgress() < TIME_OUT_PROGRESS) {
+                  mOnLoadStateListener.onLoadFailed(0, TAG + " load timeout.");
+                }
               }
-            }
-          }, TIME_OUT_MILLIS);
-
-          Logger.i(TAG, "onPageStarted: ");
+            }, TIME_OUT_MILLIS);
+          }
         }
 
         @Override
         public void onPageFinished(WebView view, String url) {
           String title = view.getTitle(); // Get page title
 
-          Logger.e(TAG, "onPageFinished WebView title=" + title);
+          Logger.d(TAG, "onPageFinished WebView title=" + title);
         }
 
         @Override
-        public void onReceivedError(WebView view, int errorCode, String description,
+        public void onReceivedError(WebView view, final int errorCode, final String description,
             String failingUrl) {
+          mOnLoadStateListener.onLoadFailed(errorCode, description);
           Toast.makeText(view.getContext(), "Load failed with error: " + description,
               Toast.LENGTH_LONG).show();
         }
@@ -244,7 +272,9 @@ class BrowserDataManager {
               mHasPreloaded.set(true);
             }
             // Send load complete message
-            mHandler.sendEmptyMessage(HANDLE_LOAD_COMPLETE);
+            if (mHandler != null) {
+              mHandler.sendEmptyMessage(MSG_LOAD_COMPLETE);
+            }
           }
         }
       });

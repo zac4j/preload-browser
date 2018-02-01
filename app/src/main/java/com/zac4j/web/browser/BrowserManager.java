@@ -2,6 +2,7 @@ package com.zac4j.web.browser;
 
 import android.content.Context;
 import android.support.v4.app.FragmentManager;
+import android.view.ViewGroup;
 import android.webkit.WebView;
 import com.zac4j.web.Logger;
 import com.zac4j.web.router.UrlRouter;
@@ -122,20 +123,58 @@ public class BrowserManager {
       mBrowserDialog.show(fragmentManager, TAG);
       mBrowserDialog.setOnLifecycleListener(new BrowserDialogFragment.OnLifecycleListener() {
         @Override
-        public void onDialogShown() {
+        public void onDialogShown(ViewGroup container) {
           mHasDialog.set(true);
-          mDataManager.assembleWebView(mBrowserDialog.getBrowserContainer());
+          mDataManager.assembleWebView(container);
         }
 
         @Override
-        public void onDialogDismiss() {
+        public void onDialogDismiss(ViewGroup container) {
           mHasDialog.set(false);
-          mDataManager.removeWebView(mBrowserDialog.getBrowserContainer());
+          mDataManager.removeWebView(container);
         }
       });
     } catch (InstantiationException | IllegalAccessException e) {
       Logger.e(TAG, e.getMessage());
     }
+  }
+
+  public void showOnLoadComplete(final FragmentManager fragmentManager,
+      final Class<? extends BrowserDialogFragment> dialogClass) {
+
+    if (mHasDialog.get()) {
+      return;
+    }
+
+    mDataManager.registerOnLoadStateListener(new BrowserDataManager.OnLoadStateListener() {
+      @Override
+      public void onLoadComplete() {
+        try {
+          mBrowserDialog = dialogClass.newInstance();
+          mBrowserDialog.show(fragmentManager, TAG);
+          mBrowserDialog.setOnLifecycleListener(new BrowserDialogFragment.OnLifecycleListener() {
+            @Override
+            public void onDialogShown(ViewGroup container) {
+              mHasDialog.set(true);
+              mDataManager.assembleWebView(container);
+            }
+
+            @Override
+            public void onDialogDismiss(ViewGroup container) {
+              mHasDialog.set(false);
+              mDataManager.removeWebView(container);
+            }
+          });
+        } catch (InstantiationException | IllegalAccessException e) {
+          Logger.e(TAG, e.getMessage());
+        }
+      }
+
+      @Override
+      public void onLoadFailed(int errorCode, String description) {
+
+      }
+    });
   }
 
   /**

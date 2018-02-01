@@ -16,9 +16,9 @@ public abstract class BrowserDialogFragment extends DialogFragment {
   private static final String TAG = BrowserDialogFragment.class.getSimpleName();
 
   public interface OnLifecycleListener {
-    void onDialogShown();
+    void onDialogShown(ViewGroup container);
 
-    void onDialogDismiss();
+    void onDialogDismiss(ViewGroup container);
   }
 
   private OnLifecycleListener mLifecycleListener;
@@ -32,14 +32,14 @@ public abstract class BrowserDialogFragment extends DialogFragment {
     Logger.d(TAG, "Dialog onActivityCreated");
     super.onActivityCreated(savedInstanceState);
 
-    mLifecycleListener.onDialogShown();
+    mLifecycleListener.onDialogShown(getBrowserContainer());
   }
 
   @Override
   public void onDismiss(DialogInterface dialog) {
     super.onDismiss(dialog);
 
-    mLifecycleListener.onDialogDismiss();
+    mLifecycleListener.onDialogDismiss(getBrowserContainer());
   }
 
   public abstract ViewGroup getBrowserContainer();
