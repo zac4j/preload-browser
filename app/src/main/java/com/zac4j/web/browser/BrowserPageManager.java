@@ -5,8 +5,6 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.os.Build;
 import android.os.Handler;
-import android.os.Looper;
-import android.os.Message;
 import android.view.View;
 import android.view.ViewGroup;
 import android.webkit.WebChromeClient;
@@ -29,23 +27,21 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * Created by Zaccc on 2017/12/7.
  */
 
-class BrowserDataManager {
+class BrowserPageManager {
 
-  private static final String TAG = BrowserDataManager.class.getSimpleName();
+  private static final String TAG = BrowserPageManager.class.getSimpleName();
 
-  private static final int MSG_LOAD_COMPLETE = 0xaa;
-  private static final int MSG_LOAD_TIMEOUT = 0xbb;
-  private static final int MSG_LOAD_FAILED = 0xcc;
-
-  // WebView timeout spec.
+  // WebView request timeout spec.
   private static final int TIME_OUT_PROGRESS = 50;
   private static final long TIME_OUT_MILLIS = 3 * 1000L;
 
   private Context mAppContext;
   private WebView mWebView;
 
-  // If preload complete.
-  private AtomicBoolean mHasPreloaded;
+  // If preload url.
+  private boolean mIsPreload;
+  // If load url complete
+  private AtomicBoolean mIsLoadComplete;
   // Browser event handler
   private Handler mHandler;
   // Browser url route spec.
@@ -60,10 +56,14 @@ class BrowserDataManager {
     void onLoadFailed(int errorCode, String description);
   }
 
-  BrowserDataManager(final Context context) {
+  private BrowserPageManager() {
+
+  }
+
+  BrowserPageManager(final Context context) {
     prepareWebView(context);
     mAppContext = context;
-    mHasPreloaded = new AtomicBoolean(false);
+    mIsLoadComplete = new AtomicBoolean(false);
     mHandler = new Handler();
   }
 
@@ -111,6 +111,8 @@ class BrowserDataManager {
     if (mWebView == null) {
       throw new IllegalStateException("You should initialize BrowserManager before load url.");
     }
+
+    mIsPreload = true;
 
     loadUrl(url);
   }
@@ -238,6 +240,7 @@ class BrowserDataManager {
               @Override
               public void run() {
                 if (view != null && view.getProgress() < TIME_OUT_PROGRESS) {
+                  mIsLoadComplete.set(false);
                   mOnLoadStateListener.onLoadFailed(0, TAG + " load timeout.");
                 }
               }
@@ -268,12 +271,11 @@ class BrowserDataManager {
           Logger.d(TAG, "onProgressChanged: " + newProgress);
           if (view != null && newProgress == 100) {
             // Page load complete
-            if (!mHasPreloaded.get()) {
-              mHasPreloaded.set(true);
-            }
-            // Send load complete message
-            if (mHandler != null) {
-              mHandler.sendEmptyMessage(MSG_LOAD_COMPLETE);
+            if (!mIsLoadComplete.get()) {
+              mIsLoadComplete.set(true);
+              if (mOnLoadStateListener != null) {
+                mOnLoadStateListener.onLoadComplete();
+              }
             }
           }
         }
@@ -328,11 +330,20 @@ class BrowserDataManager {
     }
   }
 
-  boolean isPreloadComplete() {
-    return mHasPreloaded.get();
+  boolean isPreload() {
+    return mIsPreload;
+  }
+
+  boolean isLoadComplete() {
+    return mIsLoadComplete.get();
   }
 
   void clearWebView() {
+
+    mIsPreload = false;
+
+    mIsLoadComplete.set(false);
+
     if (mWebView != null) {
       mWebView.clearHistory();
 
@@ -346,6 +357,11 @@ class BrowserDataManager {
   }
 
   void destroyWebView() {
+
+    mIsPreload = false;
+
+    mIsLoadComplete.set(false);
+
     if (mWebView != null) {
       mWebView.clearHistory();
 

@@ -5,6 +5,8 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
 import android.view.View;
+import android.widget.CompoundButton;
+import android.widget.Switch;
 import android.widget.Toast;
 import com.zac4j.web.AppLifecycleService;
 import com.zac4j.web.Logger;
@@ -22,7 +24,6 @@ public class MainActivity extends AppCompatActivity {
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.activity_main);
-
     // Start service to detect app lifecycle.
     startService(new Intent(getBaseContext(), AppLifecycleService.class));
   }
@@ -32,7 +33,7 @@ public class MainActivity extends AppCompatActivity {
     Logger.d(TAG, "onStart");
     super.onStart();
 
-    preload();
+    preload(Browser.URL);
   }
 
   @Override
@@ -45,12 +46,12 @@ public class MainActivity extends AppCompatActivity {
     startActivity(new Intent(MainActivity.this, SecondaryActivity.class));
   }
 
-  private void preload() {
+  private void preload(String url) {
     Logger.d(TAG, "Preload url in Main Activity");
     // Step one: get BrowserManager instance
     mBrowserManager = BrowserManager.getInstance(getApplicationContext());
     // Step two: set url to preload data
-    mBrowserManager.preloadUrl(Browser.URL);
+    mBrowserManager.preloadUrl(url);
     // Step three: add intercept scheme in the WebViewClient::shouldOverrideUrlLoading url route specification.
     mBrowserManager.addUrlRouter(new UrlRouter() {
       @Override

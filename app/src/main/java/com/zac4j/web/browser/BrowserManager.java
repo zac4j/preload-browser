@@ -1,6 +1,7 @@
 package com.zac4j.web.browser;
 
 import android.content.Context;
+import android.os.Bundle;
 import android.support.v4.app.FragmentManager;
 import android.view.ViewGroup;
 import android.webkit.WebView;
@@ -21,16 +22,17 @@ public class BrowserManager {
   private static final Object LOCK = new Object();
   private static BrowserManager sInstance;
 
-  private final BrowserDataManager mDataManager;
+  private final BrowserPageManager mPageManager;
 
   private AtomicBoolean mHasDialog;
   private BrowserDialogFragment mBrowserDialog;
+  private BrowserPageManager.OnLoadStateListener mOnLoadStateListener;
 
   /**
-   * Provide BrowserDataManager Singleton
+   * Provide BrowserPageManager Singleton
    *
    * @param context It's better to provide application context.
-   * @return BrowserDataManager instance.
+   * @return BrowserPageManager instance.
    */
   public static BrowserManager getInstance(Context context) {
     Logger.d(TAG, "Getting browser data manager instance");
@@ -44,7 +46,7 @@ public class BrowserManager {
   }
 
   private BrowserManager(final Context context) {
-    mDataManager = new BrowserDataManager(context);
+    mPageManager = new BrowserPageManager(context);
     mHasDialog = new AtomicBoolean(false);
   }
 
@@ -54,7 +56,7 @@ public class BrowserManager {
    * @return WebView instance.
    */
   public WebView getWebView() {
-    return mDataManager.getWebView();
+    return mPageManager.getWebView();
   }
 
   /**
@@ -63,23 +65,32 @@ public class BrowserManager {
    * @param router url route spec.
    */
   public void addUrlRouter(UrlRouter router) {
-    mDataManager.addUrlRouter(router);
+    mPageManager.addUrlRouter(router);
   }
 
   /**
    * Set up WebView default settings.
    */
   public void setupWebViewWithDefaults() {
-    mDataManager.setupWebViewWithDefaults(getWebView());
+    mPageManager.setupWebViewWithDefaults(getWebView());
   }
 
   /**
-   * Returns if BrowserManager preload url complete.
+   * Returns if BrowserManager preload url.
    *
-   * @return true if preload complete, otherwise false.
+   * @return true if preload, otherwise false.
    */
-  public boolean isPreloadComplete() {
-    return mDataManager.isPreloadComplete();
+  public boolean isPreload() {
+    return mPageManager.isPreload();
+  }
+
+  /**
+   * Returns if BrowserManager load url complete.
+   *
+   * @return true if load complete, otherwise false.
+   */
+  public boolean isLoadComplete() {
+    return mPageManager.isLoadComplete();
   }
 
   /**
@@ -89,7 +100,7 @@ public class BrowserManager {
    */
   public void preloadUrl(String url) {
     if (Utils.isValidUrl(url)) {
-      mDataManager.preloadUrl(url);
+      mPageManager.preloadUrl(url);
     } else {
       throw new IllegalArgumentException("You shouldn't load url with an invalid url");
     }
@@ -102,7 +113,7 @@ public class BrowserManager {
    */
   public void loadUrl(String url) {
     if (Utils.isValidUrl(url)) {
-      mDataManager.loadUrl(url);
+      mPageManager.loadUrl(url);
     } else {
       throw new IllegalArgumentException("You shouldn't load url with an invalid url");
     }
@@ -125,13 +136,13 @@ public class BrowserManager {
         @Override
         public void onDialogShown(ViewGroup container) {
           mHasDialog.set(true);
-          mDataManager.assembleWebView(container);
+          mPageManager.assembleWebView(container);
         }
 
         @Override
         public void onDialogDismiss(ViewGroup container) {
           mHasDialog.set(false);
-          mDataManager.removeWebView(container);
+          mPageManager.removeWebView(container);
         }
       });
     } catch (InstantiationException | IllegalAccessException e) {
@@ -139,32 +150,40 @@ public class BrowserManager {
     }
   }
 
-  public void showOnLoadComplete(final FragmentManager fragmentManager,
+  /**
+   * Show a browser dialog.
+   *
+   * @param fragmentManager provide proper FragmentManager to show Dialog Fragment.
+   */
+  public void showDialog(FragmentManager fragmentManager,
+      Class<? extends BrowserDialogFragment> dialogClass, Bundle bundle) {
+    try {
+      if (mHasDialog.get()) {
+        return;
+      }
+      mBrowserDialog = dialogClass.newInstance();
+      mBrowserDialog.setArguments(bundle);
+      mBrowserDialog.show(fragmentManager, TAG);
+      mBrowserDialog.setOnLifecycleListener(createBrowserDialogOnLifecycleListener());
+    } catch (InstantiationException | IllegalAccessException e) {
+      Logger.e(TAG, e.getMessage());
+    }
+  }
+
+  public void showDialogOnLoadComplete(final FragmentManager fragmentManager,
       final Class<? extends BrowserDialogFragment> dialogClass) {
 
     if (mHasDialog.get()) {
       return;
     }
 
-    mDataManager.registerOnLoadStateListener(new BrowserDataManager.OnLoadStateListener() {
+    mOnLoadStateListener = new BrowserPageManager.OnLoadStateListener() {
       @Override
       public void onLoadComplete() {
         try {
           mBrowserDialog = dialogClass.newInstance();
           mBrowserDialog.show(fragmentManager, TAG);
-          mBrowserDialog.setOnLifecycleListener(new BrowserDialogFragment.OnLifecycleListener() {
-            @Override
-            public void onDialogShown(ViewGroup container) {
-              mHasDialog.set(true);
-              mDataManager.assembleWebView(container);
-            }
-
-            @Override
-            public void onDialogDismiss(ViewGroup container) {
-              mHasDialog.set(false);
-              mDataManager.removeWebView(container);
-            }
-          });
+          mBrowserDialog.setOnLifecycleListener(createBrowserDialogOnLifecycleListener());
         } catch (InstantiationException | IllegalAccessException e) {
           Logger.e(TAG, e.getMessage());
         }
@@ -172,9 +191,58 @@ public class BrowserManager {
 
       @Override
       public void onLoadFailed(int errorCode, String description) {
-
+        Logger.e(TAG,
+            "load url failed, errorCode : " + errorCode + ", description: " + description);
       }
-    });
+    };
+
+    mPageManager.registerOnLoadStateListener(mOnLoadStateListener);
+  }
+
+  public void showDialogOnLoadComplete(final FragmentManager fragmentManager,
+      final Class<? extends BrowserDialogFragment> dialogClass, final Bundle bundle) {
+
+    if (mHasDialog.get()) {
+      return;
+    }
+
+    mOnLoadStateListener = new BrowserPageManager.OnLoadStateListener() {
+      @Override
+      public void onLoadComplete() {
+        try {
+          mBrowserDialog = dialogClass.newInstance();
+          mBrowserDialog.setArguments(bundle);
+          mBrowserDialog.show(fragmentManager, TAG);
+          mBrowserDialog.setOnLifecycleListener(createBrowserDialogOnLifecycleListener());
+        } catch (InstantiationException | IllegalAccessException e) {
+          Logger.e(TAG, e.getMessage());
+        }
+      }
+
+      @Override
+      public void onLoadFailed(int errorCode, String description) {
+        Logger.e(TAG,
+            "load url failed, errorCode : " + errorCode + ", description: " + description);
+      }
+    };
+
+    mPageManager.registerOnLoadStateListener(mOnLoadStateListener);
+  }
+
+  private BrowserDialogFragment.OnLifecycleListener createBrowserDialogOnLifecycleListener() {
+    return new BrowserDialogFragment.OnLifecycleListener() {
+      @Override
+      public void onDialogShown(ViewGroup container) {
+        mHasDialog.set(true);
+        mPageManager.assembleWebView(container);
+      }
+
+      @Override
+      public void onDialogDismiss(ViewGroup container) {
+        mHasDialog.set(false);
+        mPageManager.removeWebView(container);
+      }
+    };
   }
 
   /**
@@ -183,6 +251,9 @@ public class BrowserManager {
   public void closeDialog() {
     if (mHasDialog.get() && mBrowserDialog != null) {
       mBrowserDialog.dismiss();
+      if (mOnLoadStateListener != null) {
+        mPageManager.unregisterOnLoadStateListener(mOnLoadStateListener);
+      }
     }
   }
 
@@ -191,7 +262,7 @@ public class BrowserManager {
    */
   public void clearWebView() {
     if (getWebView() != null) {
-      mDataManager.clearWebView();
+      mPageManager.clearWebView();
     }
   }
 
@@ -200,7 +271,7 @@ public class BrowserManager {
    */
   public void destroyWebView() {
     if (getWebView() != null) {
-      mDataManager.destroyWebView();
+      mPageManager.destroyWebView();
     }
   }
 }

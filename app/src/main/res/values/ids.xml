@@ -3,4 +3,5 @@
   <item name="container" type="id"/>
   <item name="main_tv_say_hello" type="id"/>
   <item name="main_btn_get_packet" type="id"/>
+  <item name="main_swc_preload" type="id"/>
 </resources>
