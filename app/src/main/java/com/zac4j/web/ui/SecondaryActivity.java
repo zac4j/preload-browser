@@ -5,12 +5,15 @@ import android.os.PersistableBundle;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
+import android.util.Base64;
 import android.widget.Toast;
 import com.zac4j.web.Logger;
 import com.zac4j.web.R;
-import com.zac4j.web.browser.Browser;
+import com.zac4j.web.Utils;
 import com.zac4j.web.browser.BrowserManager;
+import com.zac4j.web.browser.Scheme;
 import com.zac4j.web.router.UrlRouter;
+import java.io.UnsupportedEncodingException;
 
 public class SecondaryActivity extends AppCompatActivity {
 
@@ -44,11 +47,15 @@ public class SecondaryActivity extends AppCompatActivity {
                             return false;
                         }
 
-                        if (scheme.startsWith(Browser.OPEN_RED_PACKET)) {
+                        if (Utils.generateMD5(scheme)
+                            .toUpperCase()
+                            .startsWith(Scheme.OPEN_RED_PACKET)) {
                             Toast.makeText(SecondaryActivity.this, "Nice, You open this RedPacket!",
                                 Toast.LENGTH_SHORT).show();
                             return true;
-                        } else if (scheme.startsWith(Browser.CLOSE_RED_PACKET)) {
+                        } else if (Utils.generateMD5(scheme)
+                            .toUpperCase()
+                            .startsWith(Scheme.CLOSE_RED_PACKET)) {
                             mBrowserManager.closeDialog();
                             return true;
                         }
@@ -64,11 +71,17 @@ public class SecondaryActivity extends AppCompatActivity {
             }
         } else {
             Logger.d(TAG, "Web page haven't load yet");
-            mBrowserManager.loadUrl(Browser.URL);
-            // Don't forget setup WebView settings
-            mBrowserManager.setupWebViewWithDefaults();
-            mBrowserManager.showDialogOnLoadComplete(getSupportFragmentManager(),
-                RedPacketDialogFragment.class);
+            byte[] buffer = Base64.decode(Scheme.URL, Base64.DEFAULT);
+            try {
+                String url = new String(buffer, "UTF-8");
+                mBrowserManager.loadUrl(url);
+                // Don't forget setup WebView settings
+                mBrowserManager.setupWebViewWithDefaults();
+                mBrowserManager.showDialogOnLoadComplete(getSupportFragmentManager(),
+                    RedPacketDialogFragment.class);
+            } catch (UnsupportedEncodingException e) {
+                Logger.e(TAG, e.getMessage());
+            }
         }
     }
 

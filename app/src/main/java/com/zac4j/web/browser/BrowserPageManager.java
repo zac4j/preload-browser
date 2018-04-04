@@ -43,9 +43,9 @@ class BrowserPageManager {
     private boolean mIsPreload;
     // If load url complete
     private AtomicBoolean mIsLoadComplete;
-    // Browser event handler
+    // Scheme event handler
     private Handler mHandler;
-    // Browser url route spec.
+    // Scheme url route spec.
     private UrlRouter mUrlRouter;
 
     private OnLoadStateChangeListener mOnLoadStateChangeListener;
@@ -96,7 +96,7 @@ class BrowserPageManager {
     }
 
     /**
-     * Preload given url in Browser WebView.
+     * Preload given url in Scheme WebView.
      *
      * @param url given url to load.
      */
@@ -113,7 +113,7 @@ class BrowserPageManager {
     }
 
     /**
-     * Load given url in Browser WebView.
+     * Load given url in Scheme WebView.
      *
      * @param url given url to load.
      */

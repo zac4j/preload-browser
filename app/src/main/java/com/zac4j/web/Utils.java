@@ -4,6 +4,9 @@ import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.util.Patterns;
+import java.io.UnsupportedEncodingException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -47,4 +50,27 @@ public class Utils {
         Matcher m = p.matcher(url.toLowerCase());
         return m.matches();
     }
+
+    /**
+     * Generate the md5 of given string text.
+     *
+     * @param text string text to generate md5.
+     * @return md5 of given text.
+     */
+    public static String generateMD5(final String text) {
+        try {
+            final MessageDigest digest = MessageDigest.getInstance("md5");
+            digest.update(text.getBytes());
+            final byte[] buffer = digest.digest();
+            final StringBuilder sb = new StringBuilder();
+            for (byte b : buffer) {
+                sb.append(String.format("%02X", b));
+            }
+            return sb.toString().toLowerCase();
+        } catch (Exception e) {
+            Logger.e("Utils", e.getMessage());
+            return "";
+        }
+    }
 }
+

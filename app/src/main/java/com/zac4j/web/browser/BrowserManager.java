@@ -11,7 +11,7 @@ import com.zac4j.web.router.UrlRouter;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * Helper class to manage Browser.
+ * Helper class to manage Scheme.
  * Created by Zaccc on 2018/1/18.
  */
 
@@ -94,7 +94,7 @@ public class BrowserManager {
     }
 
     /**
-     * Preload given url in Browser WebView
+     * Preload given url in Scheme WebView
      *
      * @param url given url to preload.
      */
@@ -107,7 +107,7 @@ public class BrowserManager {
     }
 
     /**
-     * Load given url in Browser WebView.
+     * Load given url in Scheme WebView.
      *
      * @param url given url to load.
      */
