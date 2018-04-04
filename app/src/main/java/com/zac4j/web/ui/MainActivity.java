@@ -54,7 +54,7 @@ public class MainActivity extends AppCompatActivity {
         mBrowserManager = BrowserManager.getInstance(getApplicationContext());
         // Step two: set url to preload data
         mBrowserManager.preloadUrl(url);
-        // Step four: set WebView instance settings, you can modify it urself by invoke BrowserManager.getWebView.
+        // Step three: set WebView instance settings, you can modify it urself by invoke BrowserManager.getWebView.
         mBrowserManager.setupWebViewWithDefaults();
     }
 }
