@@ -13,22 +13,23 @@ import java.lang.ref.WeakReference;
 
 public class BrowserHandler extends Handler {
 
-  private WeakReference<Context> mWeakRef;
+    private WeakReference<Context> mWeakRef;
 
-  public BrowserHandler(Context context) {
-    mWeakRef = new WeakReference<>(context);
-  }
-
-  public BrowserHandler(Context context, Looper looper) {
-    super(looper);
-    mWeakRef = new WeakReference<>(context);
-  }
-
-  @Override public void handleMessage(Message msg) {
-    if (mWeakRef == null) {
-      throw new IllegalArgumentException("Handler reference can not be null!");
-    } else {
-      super.handleMessage(msg);
+    public BrowserHandler(Context context) {
+        mWeakRef = new WeakReference<>(context);
     }
-  }
+
+    public BrowserHandler(Context context, Looper looper) {
+        super(looper);
+        mWeakRef = new WeakReference<>(context);
+    }
+
+    @Override
+    public void handleMessage(Message msg) {
+        if (mWeakRef == null) {
+            throw new IllegalArgumentException("Handler reference can not be null!");
+        } else {
+            super.handleMessage(msg);
+        }
+    }
 }

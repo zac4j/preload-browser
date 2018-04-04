@@ -12,29 +12,29 @@ import com.zac4j.web.browser.BrowserManager;
 
 public class AppLifecycleService extends Service {
 
-  private static final String TAG = AppLifecycleService.class.getSimpleName();
+    private static final String TAG = AppLifecycleService.class.getSimpleName();
 
-  @Override
-  public IBinder onBind(Intent intent) {
-    return null;
-  }
+    @Override
+    public IBinder onBind(Intent intent) {
+        return null;
+    }
 
-  @Override
-  public int onStartCommand(Intent intent, int flags, int startId) {
-    Logger.d(TAG, "Service Started");
-    return START_NOT_STICKY;
-  }
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        Logger.d(TAG, "Service Started");
+        return START_NOT_STICKY;
+    }
 
-  @Override
-  public void onDestroy() {
-    Logger.d(TAG, "Service Destroyed");
-    super.onDestroy();
-  }
+    @Override
+    public void onDestroy() {
+        Logger.d(TAG, "Service Destroyed");
+        super.onDestroy();
+    }
 
-  @Override
-  public void onTaskRemoved(Intent rootIntent) {
-    Logger.e(TAG, "Time to destroy WebView");
-    BrowserManager.getInstance(AppLifecycleService.this).destroyWebView();
-    stopSelf();
-  }
+    @Override
+    public void onTaskRemoved(Intent rootIntent) {
+        Logger.e(TAG, "Time to destroy WebView");
+        BrowserManager.getInstance(AppLifecycleService.this).destroyWebView();
+        stopSelf();
+    }
 }

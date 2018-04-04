@@ -13,35 +13,33 @@ import com.zac4j.web.Logger;
 
 public abstract class BrowserDialogFragment extends DialogFragment {
 
-  private static final String TAG = BrowserDialogFragment.class.getSimpleName();
+    private static final String TAG = BrowserDialogFragment.class.getSimpleName();
+    private OnLifecycleListener mLifecycleListener;
 
-  public interface OnLifecycleListener {
-    void onDialogShown(ViewGroup container);
+    public void setOnLifecycleListener(OnLifecycleListener listener) {
+        mLifecycleListener = listener;
+    }
 
-    void onDialogDismiss(ViewGroup container);
-  }
+    @Override
+    public void onActivityCreated(Bundle savedInstanceState) {
+        Logger.d(TAG, "Dialog onActivityCreated");
+        super.onActivityCreated(savedInstanceState);
 
-  private OnLifecycleListener mLifecycleListener;
+        mLifecycleListener.onDialogShown(getBrowserContainer());
+    }
 
-  public void setOnLifecycleListener(OnLifecycleListener listener) {
-    mLifecycleListener = listener;
-  }
+    @Override
+    public void onDismiss(DialogInterface dialog) {
+        super.onDismiss(dialog);
 
-  @Override
-  public void onActivityCreated(Bundle savedInstanceState) {
-    Logger.d(TAG, "Dialog onActivityCreated");
-    super.onActivityCreated(savedInstanceState);
+        mLifecycleListener.onDialogDismiss(getBrowserContainer());
+    }
 
-    mLifecycleListener.onDialogShown(getBrowserContainer());
-  }
+    public abstract ViewGroup getBrowserContainer();
 
-  @Override
-  public void onDismiss(DialogInterface dialog) {
-    super.onDismiss(dialog);
+    public interface OnLifecycleListener {
+        void onDialogShown(ViewGroup container);
 
-    mLifecycleListener.onDialogDismiss(getBrowserContainer());
-  }
-
-  public abstract ViewGroup getBrowserContainer();
-
+        void onDialogDismiss(ViewGroup container);
+    }
 }

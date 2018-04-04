@@ -7,6 +7,5 @@ package com.zac4j.web.router;
 
 public interface UrlRouter {
 
-  boolean route(String scheme);
-
+    boolean route(String scheme);
 }
