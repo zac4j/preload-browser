@@ -66,9 +66,9 @@ public class RedPacketDialogFragment extends BrowserDialogFragment {
     }
 
     @Override
-    public ViewGroup getBrowserContainer() {
+    public ViewGroup provideBrowserContainer() {
         if (getView() != null) {
-            return getView().findViewById(R.id.container);
+            return getView().findViewById(R.id.web_container);
         } else {
             throw new IllegalStateException(
                 "You should invoke getBrowserContainer() in OnLifecycleListener.onDialogShown()");

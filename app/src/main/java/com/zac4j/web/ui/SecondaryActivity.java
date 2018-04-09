@@ -10,7 +10,7 @@ import android.widget.Toast;
 import com.zac4j.web.Logger;
 import com.zac4j.web.R;
 import com.zac4j.web.Utils;
-import com.zac4j.web.browser.BrowserManager;
+import com.zac4j.web.browser.BrowserDialogManager;
 import com.zac4j.web.browser.Scheme;
 import com.zac4j.web.router.UrlRouter;
 import java.io.UnsupportedEncodingException;
@@ -18,7 +18,7 @@ import java.io.UnsupportedEncodingException;
 public class SecondaryActivity extends AppCompatActivity {
 
     private static final String TAG = SecondaryActivity.class.getSimpleName();
-    private BrowserManager mBrowserManager;
+    private BrowserDialogManager mBrowserManager;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState,
@@ -32,7 +32,7 @@ public class SecondaryActivity extends AppCompatActivity {
         super.onStart();
         Logger.d(TAG, "onStart");
 
-        mBrowserManager = BrowserManager.getInstance(getApplicationContext());
+        mBrowserManager = new BrowserDialogManager(getApplicationContext());
 
         // Verify if browser manager preload data complete.
         if (mBrowserManager.isPreload()) {

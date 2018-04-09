@@ -25,17 +25,17 @@ public abstract class BrowserDialogFragment extends DialogFragment {
         Logger.d(TAG, "Dialog onActivityCreated");
         super.onActivityCreated(savedInstanceState);
 
-        mLifecycleListener.onDialogShown(getBrowserContainer());
+        mLifecycleListener.onDialogShown(provideBrowserContainer());
     }
 
     @Override
     public void onDismiss(DialogInterface dialog) {
         super.onDismiss(dialog);
 
-        mLifecycleListener.onDialogDismiss(getBrowserContainer());
+        mLifecycleListener.onDialogDismiss(provideBrowserContainer());
     }
 
-    public abstract ViewGroup getBrowserContainer();
+    public abstract ViewGroup provideBrowserContainer();
 
     public interface OnLifecycleListener {
         void onDialogShown(ViewGroup container);
