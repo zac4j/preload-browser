@@ -54,7 +54,7 @@ public class BrowserManager {
 
     private OnLoadStateChangeListener mOnLoadStateChangeListener;
 
-    public BrowserManager(Context appContext) {
+    public BrowserManager(@NonNull Context appContext) {
         prepareWebView(appContext);
         mAppContext = appContext;
         mIsLoadComplete = new AtomicBoolean(false);
@@ -70,7 +70,7 @@ public class BrowserManager {
      *
      * @param listener The listener to register.
      */
-    public void registerOnLoadStateChangeListener(OnLoadStateChangeListener listener) {
+    public void registerOnLoadStateChangeListener(@NonNull OnLoadStateChangeListener listener) {
         if (mOnLoadStateChangeListener != null) {
             throw new IllegalStateException("There is already a listener registered");
         }
@@ -85,7 +85,7 @@ public class BrowserManager {
      *
      * @param listener The listener to unregister.
      */
-    public void unregisterOnLoadStateChangeListener(OnLoadStateChangeListener listener) {
+    public void unregisterOnLoadStateChangeListener(@NonNull OnLoadStateChangeListener listener) {
         if (mOnLoadStateChangeListener == null) {
             throw new IllegalStateException("No listener register");
         }
@@ -100,7 +100,7 @@ public class BrowserManager {
      *
      * @param url given url to load.
      */
-    public void preloadUrl(String url) {
+    public void preloadUrl(@NonNull String url) {
 
         if (mWebView == null) {
             throw new IllegalStateException(
@@ -121,7 +121,7 @@ public class BrowserManager {
      *
      * @param url given url to load.
      */
-    public void loadUrl(String url) {
+    public void loadUrl(@NonNull String url) {
 
         if (mWebView == null) {
             throw new IllegalStateException(
@@ -145,7 +145,7 @@ public class BrowserManager {
      *
      * @param context It's better to provide an application context.
      */
-    private void prepareWebView(Context context) {
+    private void prepareWebView(@NonNull Context context) {
         mWebView = new WebView(context);
     }
 
@@ -171,7 +171,12 @@ public class BrowserManager {
      *
      * @param container WebView container
      */
-    public void assembleWebView(ViewGroup container) {
+    public void assembleWebView(@NonNull ViewGroup container) {
+
+        if (container == null) {
+            throw new IllegalArgumentException("WebView container must not be null!");
+        }
+
         ViewGroup.LayoutParams params =
             new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT);
@@ -194,11 +199,14 @@ public class BrowserManager {
      *
      * @param container WebView container
      */
-    public void removeWebView(ViewGroup container) {
+    public void removeWebView(@NonNull ViewGroup container) {
+        if (container == null) {
+            throw new IllegalArgumentException("WebView container must not be null!");
+        }
         container.removeAllViews();
     }
 
-    public void addUrlRouter(UrlRouter router) {
+    public void addUrlRouter(@NonNull UrlRouter router) {
 
         if (router == null) {
             throw new IllegalStateException("UrlRouter must not be null!");
