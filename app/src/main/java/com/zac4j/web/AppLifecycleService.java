@@ -3,6 +3,7 @@ package com.zac4j.web;
 import android.app.Service;
 import android.content.Intent;
 import android.os.IBinder;
+import com.zac4j.web.browser.BrowserDialogManager;
 import com.zac4j.web.browser.BrowserManager;
 
 /**
@@ -34,7 +35,7 @@ public class AppLifecycleService extends Service {
     @Override
     public void onTaskRemoved(Intent rootIntent) {
         Logger.e(TAG, "Time to destroy WebView");
-        BrowserManager.getInstance(AppLifecycleService.this).destroyWebView();
+        BrowserDialogManager.getInstance(AppLifecycleService.this).destroyWebView();
         stopSelf();
     }
 }

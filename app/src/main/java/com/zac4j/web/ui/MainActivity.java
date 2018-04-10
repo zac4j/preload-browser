@@ -9,7 +9,6 @@ import com.zac4j.web.AppLifecycleService;
 import com.zac4j.web.Logger;
 import com.zac4j.web.R;
 import com.zac4j.web.browser.BrowserDialogManager;
-import com.zac4j.web.browser.BrowserManager;
 import com.zac4j.web.browser.Scheme;
 import java.io.UnsupportedEncodingException;
 
@@ -51,7 +50,7 @@ public class MainActivity extends AppCompatActivity {
     private void preload(String url) {
         Logger.d(TAG, "Preload url in MainActivity and will display in SecondaryActivity in a DialogFragment");
         // Step one: get BrowserManager instance
-        BrowserDialogManager browserManager = new BrowserDialogManager(getApplicationContext());
+        BrowserDialogManager browserManager =  BrowserDialogManager.getInstance(getApplicationContext());
         // Step two: set url to preload data
         browserManager.preloadUrl(url);
         // Step three: set WebView instance settings, you can modify it urself by invoke BrowserManager.getWebView.

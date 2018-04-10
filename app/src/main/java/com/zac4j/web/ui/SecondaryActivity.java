@@ -32,7 +32,7 @@ public class SecondaryActivity extends AppCompatActivity {
         super.onStart();
         Logger.d(TAG, "onStart");
 
-        mBrowserManager = new BrowserDialogManager(getApplicationContext());
+        mBrowserManager = BrowserDialogManager.getInstance(getApplicationContext());
 
         // Verify if browser manager preload data complete.
         if (mBrowserManager.isPreload()) {

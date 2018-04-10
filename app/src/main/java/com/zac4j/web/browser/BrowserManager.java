@@ -6,6 +6,7 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.os.Build;
 import android.os.Handler;
+import android.support.annotation.NonNull;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewParent;
@@ -27,7 +28,7 @@ import java.net.URLDecoder;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * A helper class to manage browser container data.
+ * A class for manage load/preload web resource by Android {@link WebView}.
  * Created by Zaccc on 2017/12/7.
  */
 
@@ -69,7 +70,7 @@ public class BrowserManager {
      *
      * @param listener The listener to register.
      */
-    protected void registerOnLoadStateChangeListener(OnLoadStateChangeListener listener) {
+    public void registerOnLoadStateChangeListener(OnLoadStateChangeListener listener) {
         if (mOnLoadStateChangeListener != null) {
             throw new IllegalStateException("There is already a listener registered");
         }
@@ -84,7 +85,7 @@ public class BrowserManager {
      *
      * @param listener The listener to unregister.
      */
-    protected void unregisterOnLoadStateChangeListener(OnLoadStateChangeListener listener) {
+    public void unregisterOnLoadStateChangeListener(OnLoadStateChangeListener listener) {
         if (mOnLoadStateChangeListener == null) {
             throw new IllegalStateException("No listener register");
         }
@@ -161,7 +162,7 @@ public class BrowserManager {
      *
      * @return WebView instance.
      */
-    protected WebView getWebView() {
+    public WebView getWebView() {
         return mWebView;
     }
 
@@ -170,7 +171,7 @@ public class BrowserManager {
      *
      * @param container WebView container
      */
-    protected void assembleWebView(ViewGroup container) {
+    public void assembleWebView(ViewGroup container) {
         ViewGroup.LayoutParams params =
             new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT);
@@ -193,11 +194,16 @@ public class BrowserManager {
      *
      * @param container WebView container
      */
-    protected void removeWebView(ViewGroup container) {
+    public void removeWebView(ViewGroup container) {
         container.removeAllViews();
     }
 
     public void addUrlRouter(UrlRouter router) {
+
+        if (router == null) {
+            throw new IllegalStateException("UrlRouter must not be null!");
+        }
+
         mUrlRouter = router;
         mWebView.setWebViewClient(new WebViewClient() {
             @Override
@@ -223,7 +229,12 @@ public class BrowserManager {
      *
      * @param webView WebView to set up client.
      */
-    public void setBrowserClients(final WebView webView) {
+    private void setBrowserClients(@NonNull final WebView webView) {
+
+        if (webView == null) {
+            throw new IllegalArgumentException("WebView should not be null!");
+        }
+
         try {
             webView.setWebViewClient(new WebViewClient() {
 
@@ -322,7 +333,12 @@ public class BrowserManager {
     }
 
     @SuppressLint({ "SetJavaScriptEnabled", "ObsoleteSdkInt" })
-    protected void setWebViewSettings(WebView webView) {
+    private void setWebViewSettings(@NonNull WebView webView) {
+
+        if (webView == null) {
+            throw new IllegalArgumentException("WebView should not be null!");
+        }
+
         WebSettings settings = webView.getSettings();
         settings.setJavaScriptEnabled(true);
 
@@ -366,15 +382,26 @@ public class BrowserManager {
         }
     }
 
+    /**
+     * Check if web resources is preloaded.
+     * @return true if web resource is preloaded, otherwise return false.
+     */
     public boolean isPreload() {
         return mIsPreload;
     }
 
+    /**
+     * Check web resources is load complete.
+     * @return true if web resource is load complete, otherwise return false.
+     */
     public boolean isLoadComplete() {
         return mIsLoadComplete.get();
     }
 
-    protected void clearWebView() {
+    /**
+     * Clean up WebView object
+     */
+    public void clearWebView() {
 
         mIsPreload = false;
 
@@ -392,7 +419,10 @@ public class BrowserManager {
         }
     }
 
-    protected void destroyWebView() {
+    /**
+     * Destroy WebView object.
+     */
+    public void destroyWebView() {
 
         mIsPreload = false;
 
@@ -426,6 +456,9 @@ public class BrowserManager {
         }
     }
 
+    /**
+     * Interface for listening web resource load state changed.
+     */
     public interface OnLoadStateChangeListener {
 
         void onLoadComplete();
