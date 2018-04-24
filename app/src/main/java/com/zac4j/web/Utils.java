@@ -3,10 +3,11 @@ package com.zac4j.web;
 import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.util.Log;
 import android.util.Patterns;
-import java.io.UnsupportedEncodingException;
+import java.io.Closeable;
+import java.io.IOException;
 import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -70,6 +71,16 @@ public class Utils {
         } catch (Exception e) {
             Logger.e("Utils", e.getMessage());
             return "";
+        }
+    }
+
+    public static void close(Closeable closeable) {
+        if (closeable != null) {
+            try {
+                closeable.close();
+            } catch (IOException e) {
+                Log.d("Utils", "close() called failed with: )" + e.getMessage());
+            }
         }
     }
 }
