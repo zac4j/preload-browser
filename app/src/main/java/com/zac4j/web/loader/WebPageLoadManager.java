@@ -1,14 +1,12 @@
 package com.zac4j.web.loader;
 
 import com.zac4j.web.Logger;
-import java.io.BufferedInputStream;
+import com.zac4j.web.network.LoggingInterceptor;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
-import java.util.zip.GZIPInputStream;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.OkHttpClient;
@@ -43,17 +41,11 @@ public class WebPageLoadManager {
         return sInstance;
     }
 
-    public void loadUrl(final String remoteUrl, final String destinationDir) {
-        Request request = new Request.Builder().header("Accept", "text/html")
-            .header("Accept-Encoding", "gzip")
-            .header("Accept-Language", "zh-CN,zh;")
-            .url(remoteUrl)
-            .get()
-            .build();
+    public void loadUrl(final String remoteUrl, final String cacheLocation) {
+        Request request = new Request.Builder().url(remoteUrl).get().build();
 
-        OkHttpClient client = new OkHttpClient.Builder().followRedirects(false)
-            .followSslRedirects(false)
-            .connectTimeout(15, TimeUnit.SECONDS)
+        OkHttpClient client = new OkHttpClient.Builder().connectTimeout(15, TimeUnit.SECONDS)
+            .addInterceptor(new LoggingInterceptor())
             .build();
 
         Call call = client.newCall(request);
@@ -65,33 +57,24 @@ public class WebPageLoadManager {
 
             @Override
             public void onResponse(Call call, Response response) throws IOException {
-                if (response == null
-                    || response.body() == null
-                    || response.body().source() == null) {
+                if (response == null) {
                     return;
                 }
 
-                InputStream is = response.body().byteStream();
-                InputStream sourceStream;
-                if ("gzip".equalsIgnoreCase(response.header("Content-Encoding"))) {
-                    sourceStream = new BufferedInputStream(new GZIPInputStream(is));
-                } else {
-                    sourceStream = new BufferedInputStream(is);
-                }
+                Logger.d(TAG,
+                    "Remote url " + remoteUrl + " load finished,  cached in: " + cacheLocation);
 
-                File file = new File(destinationDir);
+                File file = new File(cacheLocation);
                 BufferedSink sink = Okio.buffer(Okio.sink(file));
                 sink.writeAll(response.body().source());
                 sink.close();
 
-                response.body().source();
-
-                mCachedPageMapper.put(remoteUrl, destinationDir);
+                mCachedPageMapper.put(remoteUrl, cacheLocation);
             }
         });
     }
 
-    public String getUrlCache(String url) {
+    public String getCacheLocation(String url) {
         if (mCachedPageMapper != null && mCachedPageMapper.containsKey(url)) {
             return mCachedPageMapper.get(url);
         } else {

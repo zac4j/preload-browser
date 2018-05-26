@@ -3,4 +3,5 @@
     <string name="second_say_hello">Hello Secondary!</string>
     <string name="main_say_hello">Hello Main!</string>
     <string name="main_get_packet">Get Packet</string>
+    <string name="go_to_quaternary">Go To Quaternary</string>
 </resources>

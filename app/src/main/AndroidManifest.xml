@@ -14,7 +14,7 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
 
-        <activity android:name="com.zac4j.web.ui.PrimaryActivity">
+        <activity android:name="com.zac4j.web.ui.TertiaryActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
 
@@ -22,7 +22,7 @@
             </intent-filter>
         </activity>
         <activity android:name="com.zac4j.web.ui.SecondaryActivity"/>
-        <activity android:name="com.zac4j.web.ui.TertiaryActivity"/>
+        <!--<activity android:name="com.zac4j.web.ui.TertiaryActivity"/>-->
         <activity android:name="com.zac4j.web.ui.QuaternaryActivity"/>
 
         <service
