@@ -3,18 +3,16 @@ package com.zac4j.web.ui;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Base64;
 import android.view.View;
 import com.zac4j.web.AppLifecycleService;
 import com.zac4j.web.Logger;
 import com.zac4j.web.R;
+import com.zac4j.web.Utils;
 import com.zac4j.web.browser.BrowserDialogManager;
-import com.zac4j.web.browser.Scheme;
-import java.io.UnsupportedEncodingException;
 
-public class MainActivity extends AppCompatActivity {
+public class PrimaryActivity extends AppCompatActivity {
 
-    private static final String TAG = MainActivity.class.getSimpleName();
+    private static final String TAG = PrimaryActivity.class.getSimpleName();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -28,13 +26,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onStart() {
         Logger.d(TAG, "onStart");
         super.onStart();
-        byte[] buffer = Base64.decode(Scheme.URL, Base64.DEFAULT);
-        try {
-            String url = new String(buffer, "UTF-8");
-            preload(url);
-        } catch (UnsupportedEncodingException e) {
-            Logger.e(TAG, e.getMessage());
-        }
+        preload(Utils.provideUrl());
     }
 
     @Override
@@ -44,11 +36,11 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void getPacket(View view) {
-        startActivity(new Intent(MainActivity.this, SecondaryActivity.class));
+        startActivity(new Intent(PrimaryActivity.this, SecondaryActivity.class));
     }
 
     private void preload(String url) {
-        Logger.d(TAG, "Preload url in MainActivity and will display in SecondaryActivity in a DialogFragment");
+        Logger.d(TAG, "Preload url in PrimaryActivity and will display in SecondaryActivity in a DialogFragment");
         // Step one: get BrowserManager instance
         BrowserDialogManager browserManager =  BrowserDialogManager.getInstance(getApplicationContext());
         // Step two: set url to preload data

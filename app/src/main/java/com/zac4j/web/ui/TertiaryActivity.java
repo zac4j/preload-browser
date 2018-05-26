@@ -10,6 +10,9 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.FrameLayout;
 import com.zac4j.web.R;
+import com.zac4j.web.Utils;
+import com.zac4j.web.loader.WebPageLoadManager;
+import java.io.File;
 
 /**
  * Created by Zaccc on 2018/4/23.
@@ -20,23 +23,15 @@ public class TertiaryActivity extends Activity {
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_tertiary);
-
-        FrameLayout webViewContainer = findViewById(R.id.web_container);
-        WebView webView = new WebView(getApplicationContext());
-        webViewContainer.addView(webView);
-
-        webView.setWebViewClient(new PreloadWebViewClient());
     }
 
-    class PreloadWebViewClient extends WebViewClient {
+    @Override
+    protected void onStart() {
+        super.onStart();
 
-        @Nullable
-        @Override
-        public WebResourceResponse shouldInterceptRequest(WebView view,
-            WebResourceRequest request) {
+        String url = Utils.provideUrl();
 
-            Uri uri = request.getUrl();
-            return super.shouldInterceptRequest(view, request);
-        }
+        String destinationDir = getCacheDir().getPath() + File.separator + "index.html";
+        WebPageLoadManager.getInstance().loadUrl(url, destinationDir);
     }
 }

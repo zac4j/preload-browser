@@ -1,11 +1,14 @@
 package com.zac4j.web.loader;
 
 import com.zac4j.web.Logger;
+import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.zip.GZIPInputStream;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.OkHttpClient;
@@ -67,10 +70,22 @@ public class WebPageLoadManager {
                     || response.body().source() == null) {
                     return;
                 }
+
+                InputStream is = response.body().byteStream();
+                InputStream sourceStream;
+                if ("gzip".equalsIgnoreCase(response.header("Content-Encoding"))) {
+                    sourceStream = new BufferedInputStream(new GZIPInputStream(is));
+                } else {
+                    sourceStream = new BufferedInputStream(is);
+                }
+
                 File file = new File(destinationDir);
                 BufferedSink sink = Okio.buffer(Okio.sink(file));
                 sink.writeAll(response.body().source());
                 sink.close();
+
+                response.body().source();
+
                 mCachedPageMapper.put(remoteUrl, destinationDir);
             }
         });

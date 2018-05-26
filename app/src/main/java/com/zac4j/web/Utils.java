@@ -3,7 +3,9 @@ package com.zac4j.web;
 import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.util.Base64;
 import android.util.Patterns;
+import com.zac4j.web.browser.Scheme;
 import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -11,6 +13,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class Utils {
+
+    private static final String TAG = "Utils";
 
     /**
      * This is used to check the network is available or not.
@@ -37,6 +41,17 @@ public class Utils {
             return false;
         }
         return status;
+    }
+
+    public static String provideUrl() {
+        String result = "";
+        byte[] buffer = Base64.decode(Scheme.URL, Base64.DEFAULT);
+        try {
+            result = new String(buffer, "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            Logger.e(TAG, e.getMessage());
+        }
+        return result;
     }
 
     /**
