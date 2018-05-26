@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.text.TextUtils;
+import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
@@ -39,11 +40,22 @@ public class QuaternaryActivity extends Activity {
         webView.setWebViewClient(new QuaternaryActivity.PreloadWebViewClient());
         webView.setWebChromeClient(new WebChromeClient());
 
-        webView.getSettings().setJavaScriptEnabled(true);
+        Utils.configWebViewDefaults(webView);
         webView.loadUrl(Utils.provideUrl());
     }
 
     class PreloadWebViewClient extends WebViewClient {
+
+        @Override
+        public void onPageFinished(WebView view, String url) {
+            String jsCall = "window.webView == null";
+            view.evaluateJavascript(jsCall, new ValueCallback<String>() {
+                @Override
+                public void onReceiveValue(String value) {
+
+                }
+            });
+        }
 
         @Nullable
         @Override
