@@ -4,4 +4,6 @@
     <string name="main_say_hello">Hello Main!</string>
     <string name="main_get_packet">Get Packet</string>
     <string name="go_to_quaternary">Go To Quaternary</string>
+    <string name="approach_one">Approach One</string>
+    <string name="approach_two">Approach Two</string>
 </resources>

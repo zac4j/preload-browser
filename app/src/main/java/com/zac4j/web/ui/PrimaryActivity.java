@@ -17,7 +17,7 @@ public class PrimaryActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_primary);
         // Start service to detect app lifecycle.
         startService(new Intent(getBaseContext(), AppLifecycleService.class));
     }
@@ -46,6 +46,6 @@ public class PrimaryActivity extends AppCompatActivity {
         // Step two: set url to preload data
         browserManager.preloadUrl(url);
         // Step three: set WebView instance settings, you can modify it urself by invoke BrowserManager.getWebView.
-        browserManager.setupWebViewWithDefaults();
+        //browserManager.setupWebViewWithDefaults();
     }
 }

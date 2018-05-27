@@ -13,6 +13,7 @@ import com.zac4j.web.Utils;
 import com.zac4j.web.browser.BrowserDialogManager;
 import com.zac4j.web.browser.Scheme;
 import com.zac4j.web.router.UrlRouter;
+import com.zac4j.web.ui.dialog.RedPacketDialogFragment;
 import java.io.UnsupportedEncodingException;
 
 public class SecondaryActivity extends AppCompatActivity {
@@ -75,8 +76,6 @@ public class SecondaryActivity extends AppCompatActivity {
             try {
                 String url = new String(buffer, "UTF-8");
                 mBrowserManager.loadUrl(url);
-                // Don't forget setup WebView settings
-                mBrowserManager.setupWebViewWithDefaults();
                 mBrowserManager.showDialogOnLoadComplete(getSupportFragmentManager(),
                     RedPacketDialogFragment.class);
             } catch (UnsupportedEncodingException e) {

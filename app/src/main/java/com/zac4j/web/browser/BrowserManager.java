@@ -147,12 +147,13 @@ public class BrowserManager {
      */
     private void prepareWebView(@NonNull Context context) {
         mWebView = new WebView(context);
+        setupWebViewWithDefaults();
     }
 
     /**
      * Set up WebView default settings & clients
      */
-    public void setupWebViewWithDefaults() {
+    private void setupWebViewWithDefaults() {
         setWebViewSettings(mWebView);
         setBrowserClients(mWebView);
     }
@@ -175,6 +176,10 @@ public class BrowserManager {
 
         if (container == null) {
             throw new IllegalArgumentException("WebView container must not be null!");
+        }
+
+        if (mWebView.getParent() == container) {
+            return;
         }
 
         ViewGroup.LayoutParams params =
