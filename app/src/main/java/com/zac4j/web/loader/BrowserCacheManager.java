@@ -18,24 +18,24 @@ import okio.Okio;
 /**
  * Created by Zaccc on 2018/4/20.
  */
-public class WebPageLoadManager {
+public class BrowserCacheManager {
 
     private static final String TAG = "WebPageLoadManager";
 
-    private static WebPageLoadManager sInstance;
+    private static BrowserCacheManager sInstance;
     private static final Object LOCK = new Object();
     private Map<String, String> mCachedPageMapper;
 
-    private WebPageLoadManager() {
+    private BrowserCacheManager() {
         if (mCachedPageMapper == null) {
             mCachedPageMapper = new HashMap<>();
         }
     }
 
-    public static WebPageLoadManager getInstance() {
+    public static BrowserCacheManager getInstance() {
         if (sInstance == null) {
             synchronized (LOCK) {
-                sInstance = new WebPageLoadManager();
+                sInstance = new BrowserCacheManager();
             }
         }
         return sInstance;

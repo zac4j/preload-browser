@@ -8,7 +8,7 @@ import android.view.View;
 import com.zac4j.web.Logger;
 import com.zac4j.web.R;
 import com.zac4j.web.Utils;
-import com.zac4j.web.loader.WebPageLoadManager;
+import com.zac4j.web.loader.BrowserCacheManager;
 import java.io.File;
 
 /**
@@ -32,7 +32,7 @@ public class TertiaryActivity extends Activity {
 
         String cacheLocation = getCacheDir().getAbsolutePath() + File.separator + "index.html";
         Logger.d(TAG, "Create cache location: " + cacheLocation);
-        WebPageLoadManager.getInstance().loadUrl(url, cacheLocation);
+        BrowserCacheManager.getInstance().loadUrl(url, cacheLocation);
     }
 
     public void gotoQuaternary(View view) {
