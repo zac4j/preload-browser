@@ -229,10 +229,7 @@ public class BrowserManager {
 
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
-                if (mUrlRouter == null) {
-                    return super.shouldOverrideUrlLoading(view, request);
-                }
-                return mUrlRouter.route(request.getUrl().toString());
+                return shouldOverrideUrlLoading(view, request.getUrl().toString());
             }
         });
     }
@@ -397,6 +394,7 @@ public class BrowserManager {
 
     /**
      * Check if web resources is preloaded.
+     *
      * @return true if web resource is preloaded, otherwise return false.
      */
     public boolean isPreload() {
@@ -405,6 +403,7 @@ public class BrowserManager {
 
     /**
      * Check web resources is load complete.
+     *
      * @return true if web resource is load complete, otherwise return false.
      */
     public boolean isLoadComplete() {
