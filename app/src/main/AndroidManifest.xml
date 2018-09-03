@@ -21,8 +21,10 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
+        <activity android:name="com.zac4j.web.ui.PrimaryActivity"/>
         <activity android:name="com.zac4j.web.ui.SecondaryActivity"/>
         <activity android:name="com.zac4j.web.ui.TertiaryActivity"/>
+        <activity android:name="com.zac4j.web.ui.QuaternaryActivity"/>
 
         <service
             android:name="com.zac4j.web.AppLifecycleService"

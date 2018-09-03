@@ -1,36 +1,40 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<android.support.constraint.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.zac4j.web.ui.MainActivity"
     >
 
-    <TextView
-        android:id="@id/main_tv_say_hello"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/main_say_hello"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        />
-
     <Button
-        android:id="@id/main_btn_get_packet"
-        android:layout_width="match_parent"
+        android:id="@id/approach_one"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginBottom="8dp"
         android:layout_marginEnd="8dp"
         android:layout_marginStart="8dp"
-        android:onClick="getPacket"
-        android:text="@string/main_get_packet"
-        app:layout_constraintBottom_toTopOf="@id/main_tv_say_hello"
+        android:onClick="gotoApproach"
+        android:text="@string/approach_one"
+        app:layout_constraintBottom_toTopOf="@id/approach_two"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         style="@style/Widget.AppCompat.Button.Colored"
         />
 
+    <Button
+        android:id="@id/approach_two"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:onClick="gotoApproach"
+        android:text="@string/approach_two"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        style="@style/Widget.AppCompat.Button.Colored"
+        />
 </android.support.constraint.ConstraintLayout>

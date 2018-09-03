@@ -1,51 +1,42 @@
 package com.zac4j.web.ui;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
-import android.webkit.WebResourceRequest;
-import android.webkit.WebResourceResponse;
-import android.webkit.WebView;
-import android.webkit.WebViewClient;
-import android.widget.FrameLayout;
+import android.view.View;
+import com.zac4j.web.Logger;
 import com.zac4j.web.R;
-import com.zac4j.web.loader.WebPageLoadManager;
-import java.io.InputStream;
+import com.zac4j.web.Utils;
+import com.zac4j.web.loader.BrowserCacheManager;
+import java.io.File;
 
 /**
  * Created by Zaccc on 2018/4/23.
  */
 public class TertiaryActivity extends Activity {
 
-    private String mUrl;
+    private static final String TAG = TertiaryActivity.class.getSimpleName();
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_tertiary);
-
-        FrameLayout webViewContainer = findViewById(R.id.web_container);
-        WebView webView = new WebView(getApplicationContext());
-        webViewContainer.addView(webView);
-
-        mUrl = getIntent().getStringExtra("url");
-
-        webView.setWebViewClient(new PreloadWebViewClient());
     }
 
-    class PreloadWebViewClient extends WebViewClient {
+    @Override
+    protected void onStart() {
+        super.onStart();
 
-        @Nullable
-        @Override
-        public WebResourceResponse shouldInterceptRequest(WebView view,
-            WebResourceRequest request) {
-            WebPageLoadManager manager = WebPageLoadManager.getInstance();
-            if (manager.containsUrl(mUrl)) {
-                InputStream cacheStream = WebPageLoadManager.getInstance().getCacheStream(mUrl);
-                return new WebResourceResponse("text/html", "utf-8", cacheStream);
-            } else {
-                return super.shouldInterceptRequest(view, request);
-            }
-        }
+        String url = Utils.provideUrl();
+
+        String cacheLocation = getCacheDir().getAbsolutePath() + File.separator + "index.html";
+        Logger.d(TAG, "Create cache location: " + cacheLocation);
+        BrowserCacheManager.getInstance().loadUrl(url, cacheLocation);
+    }
+
+    public void gotoQuaternary(View view) {
+        Logger.d(TAG, "Go to Quaternary page");
+        startActivity(new Intent(TertiaryActivity.this, QuaternaryActivity.class));
     }
 }

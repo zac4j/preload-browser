@@ -41,6 +41,16 @@ public class Logger {
         }
     }
 
+    public static void i(String tag, String... message) {
+        if (BuildConfig.DEBUG) {
+            StringBuilder sb = new StringBuilder();
+            for (String msg : message) {
+                sb.append(msg);
+            }
+            Log.i(tag, sb.toString());
+        }
+    }
+
     public static void i(String tag, String message, Throwable throwable) {
         if (BuildConfig.DEBUG) {
             Log.i(tag, message, throwable);

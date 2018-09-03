@@ -208,13 +208,6 @@ public class BrowserDialogManager {
     }
 
     /**
-     * Set up {@link WebView} with default settings.
-     */
-    public void setupWebViewWithDefaults() {
-        mBrowserManager.setupWebViewWithDefaults();
-    }
-
-    /**
      * Check if web resources is preloaded.
      *
      * @return true if web resource is preloaded, otherwise return false.

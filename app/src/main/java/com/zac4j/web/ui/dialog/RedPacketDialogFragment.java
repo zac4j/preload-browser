@@ -1,4 +1,4 @@
-package com.zac4j.web.ui;
+package com.zac4j.web.ui.dialog;
 
 import android.annotation.SuppressLint;
 import android.content.DialogInterface;
