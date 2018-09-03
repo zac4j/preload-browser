@@ -5,7 +5,6 @@ import android.os.PersistableBundle;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
-import android.util.Base64;
 import android.widget.Toast;
 import com.zac4j.web.Logger;
 import com.zac4j.web.R;
@@ -14,7 +13,6 @@ import com.zac4j.web.browser.BrowserDialogManager;
 import com.zac4j.web.browser.Scheme;
 import com.zac4j.web.router.UrlRouter;
 import com.zac4j.web.ui.dialog.RedPacketDialogFragment;
-import java.io.UnsupportedEncodingException;
 
 public class SecondaryActivity extends AppCompatActivity {
 
@@ -34,10 +32,10 @@ public class SecondaryActivity extends AppCompatActivity {
         Logger.d(TAG, "onStart");
 
         mBrowserManager = BrowserDialogManager.getInstance(getApplicationContext());
-
+        String url = Utils.provideUrl();
         // Verify if browser manager preload data complete.
-        if (mBrowserManager.isPreload()) {
-            if (mBrowserManager.isLoadComplete()) {
+        if (mBrowserManager.isPreload(url)) {
+            if (mBrowserManager.isLoadComplete(url)) {
                 Logger.d(TAG, "Web page has preload complete");
                 // add intercept scheme in the WebViewClient::shouldOverrideUrlLoading url route specification.
                 mBrowserManager.addUrlRouter(new UrlRouter() {
@@ -48,15 +46,11 @@ public class SecondaryActivity extends AppCompatActivity {
                             return false;
                         }
 
-                        if (Utils.generateMD5(scheme)
-                            .toUpperCase()
-                            .startsWith(Scheme.OPEN_RED_PACKET)) {
+                        if (encodeScheme(scheme).startsWith(Scheme.OPEN_RED_PACKET)) {
                             Toast.makeText(SecondaryActivity.this, "Nice, You open this RedPacket!",
                                 Toast.LENGTH_SHORT).show();
                             return true;
-                        } else if (Utils.generateMD5(scheme)
-                            .toUpperCase()
-                            .startsWith(Scheme.CLOSE_RED_PACKET)) {
+                        } else if (encodeScheme(scheme).startsWith(Scheme.CLOSE_RED_PACKET)) {
                             mBrowserManager.closeDialog();
                             return true;
                         }
@@ -67,20 +61,15 @@ public class SecondaryActivity extends AppCompatActivity {
                 mBrowserManager.showDialog(getSupportFragmentManager(),
                     RedPacketDialogFragment.class);
             } else {
+                Logger.d(TAG, "Web page is preload and haven't load complete.");
                 mBrowserManager.showDialogOnLoadComplete(getSupportFragmentManager(),
                     RedPacketDialogFragment.class);
             }
         } else {
-            Logger.d(TAG, "Web page haven't load yet");
-            byte[] buffer = Base64.decode(Scheme.URL, Base64.DEFAULT);
-            try {
-                String url = new String(buffer, "UTF-8");
-                mBrowserManager.loadUrl(url);
-                mBrowserManager.showDialogOnLoadComplete(getSupportFragmentManager(),
-                    RedPacketDialogFragment.class);
-            } catch (UnsupportedEncodingException e) {
-                Logger.e(TAG, e.getMessage());
-            }
+            Logger.d(TAG, "Web page haven't load yet.");
+            mBrowserManager.loadUrl(url);
+            mBrowserManager.showDialogOnLoadComplete(getSupportFragmentManager(),
+                RedPacketDialogFragment.class);
         }
     }
 
@@ -88,5 +77,9 @@ public class SecondaryActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
         mBrowserManager.closeDialog();
+    }
+
+    private String encodeScheme(String scheme) {
+        return Utils.generateMD5(scheme).toUpperCase();
     }
 }

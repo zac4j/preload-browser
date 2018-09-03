@@ -2,8 +2,6 @@ package com.zac4j.web;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.os.Handler;
 import android.util.Base64;
 import android.util.Patterns;
@@ -23,33 +21,6 @@ import java.util.regex.Pattern;
 public class Utils {
 
     private static final String TAG = "Utils";
-
-    /**
-     * This is used to check the network is available or not.
-     *
-     * @param context context to fetch system service.
-     * @return true if network is available, false otherwise.
-     */
-    public static boolean isNetworkAvailable(Context context) {
-        boolean status = false;
-        try {
-            ConnectivityManager cm =
-                (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
-            NetworkInfo netInfo = cm.getNetworkInfo(0);
-            if (netInfo != null && netInfo.getState() == NetworkInfo.State.CONNECTED) {
-                status = true;
-            } else {
-                netInfo = cm.getNetworkInfo(1);
-                if (netInfo != null && netInfo.getState() == NetworkInfo.State.CONNECTED) {
-                    status = true;
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            return false;
-        }
-        return status;
-    }
 
     /**
      * Provide remote url.
@@ -103,6 +74,7 @@ public class Utils {
 
     /**
      * Gets the Base64-encoded string of a local asset file (typically a Javascript or HTML file).
+     *
      * @param context Activity context.
      * @param filePath Local file path relative to the main/src directory.
      * @return A Base64 encoded string of the file contents.

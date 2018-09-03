@@ -9,7 +9,7 @@ public class Scheme {
 
     public static final String URL = "aHR0cHM6Ly9kbC5hcHAuZ3RqYS5jb20vd2ViL2d0amFQb3B1cC9ob25nYmFvL2luZGV4Lmh0bWw=";
 
-    public static final String OPEN_RED_PACKET = "B3ED11C2A195CA7127F5D332AB732232";
+    public static final String OPEN_RED_PACKET = "068BA1D0115B916F1CD2219892A090CA";
 
     public static final String CLOSE_RED_PACKET = "9EAE9EC69A1F8B5DC0617FF6B22A4F18";
 }

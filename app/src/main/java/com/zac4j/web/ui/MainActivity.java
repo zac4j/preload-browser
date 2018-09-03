@@ -9,7 +9,7 @@ import com.zac4j.web.R;
 
 /**
  * Created by zac on 2018/5/27.
- * Description:
+ * Description:Launch Page
  */
 public class MainActivity extends Activity {
 

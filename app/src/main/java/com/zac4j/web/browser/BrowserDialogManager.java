@@ -7,7 +7,6 @@ import android.support.v4.app.FragmentManager;
 import android.view.ViewGroup;
 import android.webkit.WebView;
 import com.zac4j.web.Logger;
-import com.zac4j.web.Utils;
 import com.zac4j.web.router.UrlRouter;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -27,6 +26,7 @@ public class BrowserDialogManager {
 
     private static BrowserDialogManager sInstance;
     private BrowserManager mBrowserManager;
+    private String mUrl;
 
     public static BrowserDialogManager getInstance(Context appContext) {
         if (sInstance == null) {
@@ -59,7 +59,7 @@ public class BrowserDialogManager {
                 @Override
                 public void onDialogShown(ViewGroup container) {
                     mHasDialog.set(true);
-                    mBrowserManager.assembleWebView(container);
+                    mBrowserManager.assembleWebView(mUrl, container);
                 }
 
                 @Override
@@ -175,7 +175,7 @@ public class BrowserDialogManager {
             @Override
             public void onDialogShown(ViewGroup container) {
                 mHasDialog.set(true);
-                mBrowserManager.assembleWebView(container);
+                mBrowserManager.assembleWebView(mUrl, container);
             }
 
             @Override
@@ -204,6 +204,7 @@ public class BrowserDialogManager {
      * @param url given url to preload web resource.
      */
     public void preloadUrl(String url) {
+        mUrl = url;
         mBrowserManager.preloadUrl(url);
     }
 
@@ -212,8 +213,8 @@ public class BrowserDialogManager {
      *
      * @return true if web resource is preloaded, otherwise return false.
      */
-    public boolean isPreload() {
-        return mBrowserManager.isPreload();
+    public boolean isPreload(String url) {
+        return mBrowserManager.isPreload(url);
     }
 
     /**
@@ -221,8 +222,8 @@ public class BrowserDialogManager {
      *
      * @return true if web resource is load complete, otherwise return false.
      */
-    public boolean isLoadComplete() {
-        return mBrowserManager.isLoadComplete();
+    public boolean isLoadComplete(String url) {
+        return mBrowserManager.isLoadComplete(url);
     }
 
     /**
@@ -231,7 +232,7 @@ public class BrowserDialogManager {
      * @param router router to route given url scheme.
      */
     public void addUrlRouter(UrlRouter router) {
-        mBrowserManager.addUrlRouter(router);
+        mBrowserManager.addUrlRouter(mUrl, router);
     }
 
     /**
@@ -240,13 +241,14 @@ public class BrowserDialogManager {
      * @param url given url to preload web resource.
      */
     public void loadUrl(String url) {
+        mUrl = url;
         mBrowserManager.loadUrl(url);
     }
 
     /**
      * Destroy WebView instance.
      */
-    public void destroyWebView() {
-        mBrowserManager.destroyWebView();
+    public void destroyWebView(String url) {
+        mBrowserManager.destroyWebView(url);
     }
 }

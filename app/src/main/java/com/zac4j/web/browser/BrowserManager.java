@@ -7,9 +7,9 @@ import android.graphics.Bitmap;
 import android.os.Build;
 import android.os.Handler;
 import android.support.annotation.NonNull;
+import android.util.ArrayMap;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.ViewParent;
 import android.webkit.RenderProcessGoneDetail;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceRequest;
@@ -25,6 +25,9 @@ import com.zac4j.web.Utils;
 import com.zac4j.web.router.UrlRouter;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -41,23 +44,28 @@ public class BrowserManager {
     private static final long TIME_OUT_MILLIS = 3 * 1000L;
 
     private Context mAppContext;
-    private WebView mWebView;
-
     // If preload url.
     private boolean mIsPreload;
     // If load url complete
     private AtomicBoolean mIsLoadComplete;
     // Scheme event handler
     private Handler mHandler;
-    // Scheme url route spec.
-    private UrlRouter mUrlRouter;
+    // Collection for preload url links.
+    private Set<String> mPreloadUrlSet;
+    // Collection for load completely url links.
+    private Set<String> mLoadUrlSet;
+    // WebView pool
+    private Map<String, WebView> mWebViewPool;
 
     private OnLoadStateChangeListener mOnLoadStateChangeListener;
 
     public BrowserManager(@NonNull Context appContext) {
-        prepareWebView(appContext);
         mAppContext = appContext;
+        prepareWebView(appContext);
         mIsLoadComplete = new AtomicBoolean(false);
+        mPreloadUrlSet = new HashSet<>();
+        mLoadUrlSet = new HashSet<>();
+        mWebViewPool = new ArrayMap<>();
         mHandler = new Handler();
     }
 
@@ -102,18 +110,20 @@ public class BrowserManager {
      */
     public void preloadUrl(@NonNull String url) {
 
-        if (mWebView == null) {
-            throw new IllegalStateException(
-                "You should initialize BrowserManager before load url.");
+        WebView webView = prepareWebView(mAppContext);
+
+        if (webView == null) {
+            throw new IllegalStateException("You should initialize BrowserManager before load url");
         }
 
         if (!Utils.isValidUrl(url)) {
             throw new IllegalArgumentException("You shouldn't load url with an invalid url");
         }
 
-        mIsPreload = true;
+        // Add this link to preload url collection.
+        mPreloadUrlSet.add(url);
 
-        loadUrl(url);
+        loadUrl(url, webView);
     }
 
     /**
@@ -123,7 +133,9 @@ public class BrowserManager {
      */
     public void loadUrl(@NonNull String url) {
 
-        if (mWebView == null) {
+        WebView webView = prepareWebView(mAppContext);
+
+        if (webView == null) {
             throw new IllegalStateException(
                 "You should initialize BrowserManager before load url.");
         }
@@ -134,7 +146,42 @@ public class BrowserManager {
 
         try {
             url = URLDecoder.decode(url, "utf-8");
-            mWebView.loadUrl(url);
+
+            // Mark load complete indicator as false.
+            mIsLoadComplete.set(false);
+
+            // Add this link to load url collection.
+            mLoadUrlSet.add(url);
+
+            // Establish relationship between url and webView.
+            mWebViewPool.put(url, webView);
+
+            webView.loadUrl(url);
+        } catch (UnsupportedEncodingException e) {
+            Logger.e(TAG, "decode url failed", e);
+        }
+    }
+
+    /**
+     * Load given url in Scheme WebView.
+     *
+     * @param url given url to load.
+     */
+    private void loadUrl(@NonNull String url, @NonNull WebView webView) {
+
+        try {
+            url = URLDecoder.decode(url, "utf-8");
+
+            // Mark load complete indicator as false.
+            mIsLoadComplete.set(false);
+
+            // Add this link to load url collection.
+            mLoadUrlSet.add(url);
+
+            // Establish relationship between url and webView.
+            mWebViewPool.put(url, webView);
+
+            webView.loadUrl(url);
         } catch (UnsupportedEncodingException e) {
             Logger.e(TAG, "decode url failed", e);
         }
@@ -145,17 +192,18 @@ public class BrowserManager {
      *
      * @param context It's better to provide an application context.
      */
-    private void prepareWebView(@NonNull Context context) {
-        mWebView = new WebView(context);
-        setupWebViewWithDefaults();
+    private WebView prepareWebView(@NonNull Context context) {
+        WebView webView = new WebView(context);
+        setupWebViewWithDefaults(webView);
+        return webView;
     }
 
     /**
      * Set up WebView default settings & clients
      */
-    private void setupWebViewWithDefaults() {
-        setWebViewSettings(mWebView);
-        setBrowserClients(mWebView);
+    private void setupWebViewWithDefaults(WebView webView) {
+        setWebViewSettings(webView);
+        setBrowserClients(webView);
     }
 
     /**
@@ -163,8 +211,11 @@ public class BrowserManager {
      *
      * @return WebView instance.
      */
-    public WebView getWebView() {
-        return mWebView;
+    private WebView getWebView(String url) {
+        if (!mWebViewPool.containsKey(url)) {
+            throw new IllegalStateException("You should call loadUrl() before get WebView");
+        }
+        return mWebViewPool.get(url);
     }
 
     /**
@@ -172,13 +223,15 @@ public class BrowserManager {
      *
      * @param container WebView container
      */
-    public void assembleWebView(@NonNull ViewGroup container) {
+    public void assembleWebView(String url, @NonNull ViewGroup container) {
 
         if (container == null) {
             throw new IllegalArgumentException("WebView container must not be null!");
         }
 
-        if (mWebView.getParent() == container) {
+        WebView webView = getWebView(url);
+
+        if (webView.getParent() == container) {
             return;
         }
 
@@ -195,8 +248,8 @@ public class BrowserManager {
             params = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT);
         }
-        mWebView.setLayoutParams(params);
-        container.addView(mWebView);
+        webView.setLayoutParams(params);
+        container.addView(webView);
     }
 
     /**
@@ -211,20 +264,25 @@ public class BrowserManager {
         container.removeAllViews();
     }
 
-    public void addUrlRouter(@NonNull UrlRouter router) {
+    public void addUrlRouter(String url, @NonNull final UrlRouter router) {
 
         if (router == null) {
             throw new IllegalStateException("UrlRouter must not be null!");
         }
 
-        mUrlRouter = router;
-        mWebView.setWebViewClient(new WebViewClient() {
+        WebView webView = getWebView(url);
+
+        if (webView == null) {
+            return;
+        }
+
+        webView.setWebViewClient(new WebViewClient() {
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, String url) {
-                if (mUrlRouter == null) {
+                if (router == null) {
                     return super.shouldOverrideUrlLoading(view, url);
                 }
-                return mUrlRouter.route(url);
+                return router.route(url);
             }
 
             @Override
@@ -300,13 +358,12 @@ public class BrowserManager {
                         Logger.e(TAG, "System killed the WebView rendering process "
                             + "to reclaim memory. Recreating...");
 
-                        if (mWebView != null) {
-                            ViewGroup webViewContainer = (ViewGroup) mWebView.getParent();
+                        if (view != null) {
+                            ViewGroup webViewContainer = (ViewGroup) view.getParent();
                             if (webViewContainer != null && webViewContainer.getChildCount() > 0) {
-                                webViewContainer.removeView(mWebView);
+                                webViewContainer.removeView(view);
                             }
-                            mWebView.destroy();
-                            mWebView = null;
+                            view.destroy();
                         }
 
                         // By this point, the instance variable "mWebView" is guaranteed
@@ -366,11 +423,7 @@ public class BrowserManager {
             settings.setAllowUniversalAccessFromFileURLs(true);
         }
 
-        if (Utils.isNetworkAvailable(mAppContext)) {
-            settings.setCacheMode(WebSettings.LOAD_DEFAULT);
-        } else {
-            settings.setCacheMode(WebSettings.LOAD_CACHE_ELSE_NETWORK);
-        }
+        settings.setCacheMode(WebSettings.LOAD_DEFAULT);
         settings.setAppCacheEnabled(true);
         settings.setDomStorageEnabled(true);
         settings.setDatabaseEnabled(true);
@@ -397,8 +450,8 @@ public class BrowserManager {
      *
      * @return true if web resource is preloaded, otherwise return false.
      */
-    public boolean isPreload() {
-        return mIsPreload;
+    public boolean isPreload(String url) {
+        return mPreloadUrlSet.contains(url);
     }
 
     /**
@@ -406,65 +459,68 @@ public class BrowserManager {
      *
      * @return true if web resource is load complete, otherwise return false.
      */
-    public boolean isLoadComplete() {
-        return mIsLoadComplete.get();
+    public boolean isLoadComplete(String url) {
+        return mLoadUrlSet.contains(url) && mIsLoadComplete.get();
     }
 
     /**
      * Clean up WebView object
      */
-    public void clearWebView() {
+    public void clearWebView(String url) {
 
         mIsPreload = false;
 
         mIsLoadComplete.set(false);
 
-        if (mWebView != null) {
-            mWebView.clearHistory();
+        WebView webView = getWebView(url);
+
+        if (webView != null) {
+            webView.clearHistory();
 
             // NOTE: clears RAM cache, if you pass true, it will also clear the disk cache.
             // Probably not a great idea to pass true if you have other WebViews still alive.
-            mWebView.clearCache(true);
+            webView.clearCache(true);
 
             // Loading a blank page is optional, but will ensure that the WebView isn't doing anything when you destroy it.
-            mWebView.loadUrl("about:blank");
+            webView.loadUrl("about:blank");
         }
     }
 
     /**
      * Destroy WebView object.
      */
-    public void destroyWebView() {
+    public void destroyWebView(String url) {
 
         mIsPreload = false;
 
         mIsLoadComplete.set(false);
 
-        if (mWebView != null) {
-            mWebView.clearHistory();
+        WebView webView = getWebView(url);
+
+        if (webView != null) {
+            webView.clearHistory();
 
             // NOTE: clears RAM cache, if you pass true, it will also clear the disk cache.
             // Probably not a great idea to pass true if you have other WebViews still alive.
-            mWebView.clearCache(true);
+            webView.clearCache(true);
 
             // Loading a blank page is optional, but will ensure that the WebView isn't doing anything when you destroy it.
-            mWebView.loadUrl("about:blank");
+            webView.loadUrl("about:blank");
 
-            mWebView.onPause();
-            mWebView.removeAllViews();
-            mWebView.destroyDrawingCache();
+            webView.onPause();
+            webView.removeAllViews();
+            webView.destroyDrawingCache();
 
             // NOTE: This pauses JavaScript execution for ALL WebViews,
             // do not use if you have other WebViews still alive.
             // If you create another WebView after calling this,
             // make sure to call mWebView.resumeTimers().
-            mWebView.pauseTimers();
+            webView.pauseTimers();
 
             // NOTE: This can occasionally cause a segfault below API 17 (4.2)
-            mWebView.destroy();
+            webView.destroy();
 
-            // Null out the reference so that you don't end up re-using it.
-            mWebView = null;
+            mWebViewPool.remove(url);
         }
     }
 

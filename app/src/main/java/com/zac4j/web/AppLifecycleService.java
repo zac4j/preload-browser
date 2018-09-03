@@ -35,7 +35,6 @@ public class AppLifecycleService extends Service {
     @Override
     public void onTaskRemoved(Intent rootIntent) {
         Logger.e(TAG, "Time to destroy WebView");
-        BrowserDialogManager.getInstance(AppLifecycleService.this).destroyWebView();
         stopSelf();
     }
 }

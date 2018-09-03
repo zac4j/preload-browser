@@ -40,9 +40,11 @@ public class PrimaryActivity extends AppCompatActivity {
     }
 
     private void preload(String url) {
-        Logger.d(TAG, "Preload url in PrimaryActivity and will display in SecondaryActivity in a DialogFragment");
+        Logger.d(TAG,
+            "Preload url in PrimaryActivity and will display in SecondaryActivity in a DialogFragment");
         // Step one: get BrowserManager instance
-        BrowserDialogManager browserManager =  BrowserDialogManager.getInstance(getApplicationContext());
+        BrowserDialogManager browserManager =
+            BrowserDialogManager.getInstance(getApplicationContext());
         // Step two: set url to preload data
         browserManager.preloadUrl(url);
         // Step three: set WebView instance settings, you can modify it urself by invoke BrowserManager.getWebView.
