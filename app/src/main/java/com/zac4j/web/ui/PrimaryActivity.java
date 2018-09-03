@@ -47,6 +47,7 @@ public class PrimaryActivity extends AppCompatActivity {
             BrowserDialogManager.getInstance(getApplicationContext());
         // Step two: set url to preload data
         browserManager.preloadUrl(url);
+        //browserManager.preloadUrl(Utils.provideAnotherUrl());
         // Step three: set WebView instance settings, you can modify it urself by invoke BrowserManager.getWebView.
         //browserManager.setupWebViewWithDefaults();
     }

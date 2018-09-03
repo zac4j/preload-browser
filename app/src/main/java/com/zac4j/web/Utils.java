@@ -38,6 +38,10 @@ public class Utils {
         return result;
     }
 
+    public static String provideAnotherUrl() {
+        return "https://m.baidu.com/";
+    }
+
     /**
      * This is used to check the given URL is valid or not.
      *

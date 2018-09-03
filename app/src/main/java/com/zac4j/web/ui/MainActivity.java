@@ -6,6 +6,8 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.view.View;
 import com.zac4j.web.R;
+import com.zac4j.web.Utils;
+import com.zac4j.web.browser.BrowserDialogManager;
 
 /**
  * Created by zac on 2018/5/27.
@@ -17,6 +19,10 @@ public class MainActivity extends Activity {
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        BrowserDialogManager browserManager = BrowserDialogManager.getInstance(getApplicationContext());
+        // Step two: set url to preload data
+        browserManager.preloadUrl(Utils.provideAnotherUrl());
     }
 
     public void gotoApproach(View view) {

@@ -22,7 +22,7 @@ public class BrowserDialogManager {
     private static final Object LOCK = new Object();
     private AtomicBoolean mHasDialog;
     private BrowserDialogFragment mBrowserDialog;
-    private BrowserManager.OnLoadStateChangeListener mOnLoadStateChangeListener;
+    private BrowserManager.LoadStateListener mLoadStateListener;
 
     private static BrowserDialogManager sInstance;
     private BrowserManager mBrowserManager;
@@ -55,7 +55,7 @@ public class BrowserDialogManager {
             }
             mBrowserDialog = dialogClass.newInstance();
             mBrowserDialog.show(fragmentManager, TAG);
-            mBrowserDialog.setOnLifecycleListener(new BrowserDialogFragment.OnLifecycleListener() {
+            mBrowserDialog.setLifecycleListener(new BrowserDialogFragment.LifecycleListener() {
                 @Override
                 public void onDialogShown(ViewGroup container) {
                     mHasDialog.set(true);
@@ -87,7 +87,7 @@ public class BrowserDialogManager {
             mBrowserDialog = dialogClass.newInstance();
             mBrowserDialog.setArguments(bundle);
             mBrowserDialog.show(fragmentManager, TAG);
-            mBrowserDialog.setOnLifecycleListener(createBrowserDialogOnLifecycleListener());
+            mBrowserDialog.setLifecycleListener(createLifecycleListener());
         } catch (InstantiationException | IllegalAccessException e) {
             Logger.e(TAG, e.getMessage());
         }
@@ -106,13 +106,13 @@ public class BrowserDialogManager {
             return;
         }
 
-        mOnLoadStateChangeListener = new BrowserManager.OnLoadStateChangeListener() {
+        mLoadStateListener = new BrowserManager.LoadStateListener() {
             @Override
             public void onLoadComplete() {
                 try {
                     mBrowserDialog = dialogClass.newInstance();
                     mBrowserDialog.show(fragmentManager, TAG);
-                    mBrowserDialog.setOnLifecycleListener(createBrowserDialogOnLifecycleListener());
+                    mBrowserDialog.setLifecycleListener(createLifecycleListener());
                 } catch (InstantiationException | IllegalAccessException e) {
                     Logger.e(TAG, e.getMessage());
                 }
@@ -125,7 +125,7 @@ public class BrowserDialogManager {
             }
         };
 
-        mBrowserManager.registerOnLoadStateChangeListener(mOnLoadStateChangeListener);
+        mBrowserManager.registerLoadStateListener(mUrl, mLoadStateListener);
     }
 
     /**
@@ -142,14 +142,14 @@ public class BrowserDialogManager {
             return;
         }
 
-        mOnLoadStateChangeListener = new BrowserManager.OnLoadStateChangeListener() {
+        mLoadStateListener = new BrowserManager.LoadStateListener() {
             @Override
             public void onLoadComplete() {
                 try {
                     mBrowserDialog = dialogClass.newInstance();
                     mBrowserDialog.setArguments(bundle);
                     mBrowserDialog.show(fragmentManager, TAG);
-                    mBrowserDialog.setOnLifecycleListener(createBrowserDialogOnLifecycleListener());
+                    mBrowserDialog.setLifecycleListener(createLifecycleListener());
                 } catch (InstantiationException | IllegalAccessException e) {
                     Logger.e(TAG, e.getMessage());
                 }
@@ -162,7 +162,7 @@ public class BrowserDialogManager {
             }
         };
 
-        mBrowserManager.registerOnLoadStateChangeListener(mOnLoadStateChangeListener);
+        mBrowserManager.registerLoadStateListener(mUrl, mLoadStateListener);
     }
 
     /**
@@ -170,8 +170,8 @@ public class BrowserDialogManager {
      *
      * @return an {@link BrowserDialogFragment} lifecycle listener.
      */
-    private BrowserDialogFragment.OnLifecycleListener createBrowserDialogOnLifecycleListener() {
-        return new BrowserDialogFragment.OnLifecycleListener() {
+    private BrowserDialogFragment.LifecycleListener createLifecycleListener() {
+        return new BrowserDialogFragment.LifecycleListener() {
             @Override
             public void onDialogShown(ViewGroup container) {
                 mHasDialog.set(true);
@@ -192,9 +192,10 @@ public class BrowserDialogManager {
     public void closeDialog() {
         if (mHasDialog.get() && mBrowserDialog != null) {
             mBrowserDialog.dismiss();
-            if (mOnLoadStateChangeListener != null) {
-                mBrowserManager.unregisterOnLoadStateChangeListener(mOnLoadStateChangeListener);
+            if (mLoadStateListener != null) {
+                mBrowserManager.unregisterOnLoadStateListener(mUrl);
             }
+            mUrl = null;
         }
     }
 
@@ -213,8 +214,9 @@ public class BrowserDialogManager {
      *
      * @return true if web resource is preloaded, otherwise return false.
      */
-    public boolean isPreload(String url) {
-        return mBrowserManager.isPreload(url);
+    public boolean isPreloadUrl(String url) {
+        mUrl = url;
+        return mBrowserManager.isPreloadUrl(url);
     }
 
     /**
@@ -223,6 +225,7 @@ public class BrowserDialogManager {
      * @return true if web resource is load complete, otherwise return false.
      */
     public boolean isLoadComplete(String url) {
+        mUrl = url;
         return mBrowserManager.isLoadComplete(url);
     }
 
@@ -231,8 +234,9 @@ public class BrowserDialogManager {
      *
      * @param router router to route given url scheme.
      */
-    public void addUrlRouter(UrlRouter router) {
-        mBrowserManager.addUrlRouter(mUrl, router);
+    public void addUrlRouter(String url, UrlRouter router) {
+        mUrl = url;
+        mBrowserManager.addUrlRouter(url, router);
     }
 
     /**

@@ -14,9 +14,9 @@ import com.zac4j.web.Logger;
 public abstract class BrowserDialogFragment extends DialogFragment {
 
     private static final String TAG = BrowserDialogFragment.class.getSimpleName();
-    private OnLifecycleListener mLifecycleListener;
+    private LifecycleListener mLifecycleListener;
 
-    public void setOnLifecycleListener(OnLifecycleListener listener) {
+    public void setLifecycleListener(LifecycleListener listener) {
         mLifecycleListener = listener;
     }
 
@@ -37,7 +37,7 @@ public abstract class BrowserDialogFragment extends DialogFragment {
 
     public abstract ViewGroup provideBrowserContainer();
 
-    public interface OnLifecycleListener {
+    public interface LifecycleListener {
         void onDialogShown(ViewGroup container);
 
         void onDialogDismiss(ViewGroup container);

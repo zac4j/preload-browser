@@ -34,11 +34,11 @@ public class SecondaryActivity extends AppCompatActivity {
         mBrowserManager = BrowserDialogManager.getInstance(getApplicationContext());
         String url = Utils.provideUrl();
         // Verify if browser manager preload data complete.
-        if (mBrowserManager.isPreload(url)) {
+        if (mBrowserManager.isPreloadUrl(url)) {
             if (mBrowserManager.isLoadComplete(url)) {
-                Logger.d(TAG, "Web page has preload complete");
+                Logger.d(TAG, "Web page has preload complete -> go!");
                 // add intercept scheme in the WebViewClient::shouldOverrideUrlLoading url route specification.
-                mBrowserManager.addUrlRouter(new UrlRouter() {
+                mBrowserManager.addUrlRouter(url, new UrlRouter() {
                     @Override
                     public boolean route(String scheme) {
 

@@ -3,10 +3,9 @@ package com.zac4j.web.browser;
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.content.Context;
-import android.graphics.Bitmap;
 import android.os.Build;
-import android.os.Handler;
 import android.support.annotation.NonNull;
+import android.text.TextUtils;
 import android.util.ArrayMap;
 import android.view.View;
 import android.view.ViewGroup;
@@ -28,7 +27,6 @@ import java.net.URLDecoder;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * A class for manage load/preload web resource by Android {@link WebView}.
@@ -39,34 +37,22 @@ public class BrowserManager {
 
     private static final String TAG = BrowserManager.class.getSimpleName();
 
-    // WebView request timeout spec.
-    private static final int TIME_OUT_PROGRESS = 50;
-    private static final long TIME_OUT_MILLIS = 3 * 1000L;
-
     private Context mAppContext;
-    // If preload url.
-    private boolean mIsPreload;
-    // If load url complete
-    private AtomicBoolean mIsLoadComplete;
-    // Scheme event handler
-    private Handler mHandler;
     // Collection for preload url links.
     private Set<String> mPreloadUrlSet;
     // Collection for load completely url links.
-    private Set<String> mLoadUrlSet;
-    // WebView pool
+    private Set<String> mFinishLoadUrlSet;
+    // WebView pool.
     private Map<String, WebView> mWebViewPool;
+    // Collection for url load state listener.
+    private Map<String, LoadStateListener> mUrlLoadStateListeners;
 
-    private OnLoadStateChangeListener mOnLoadStateChangeListener;
-
-    public BrowserManager(@NonNull Context appContext) {
+    BrowserManager(@NonNull Context appContext) {
         mAppContext = appContext;
-        prepareWebView(appContext);
-        mIsLoadComplete = new AtomicBoolean(false);
         mPreloadUrlSet = new HashSet<>();
-        mLoadUrlSet = new HashSet<>();
+        mFinishLoadUrlSet = new HashSet<>();
         mWebViewPool = new ArrayMap<>();
-        mHandler = new Handler();
+        mUrlLoadStateListeners = new ArrayMap<>();
     }
 
     /**
@@ -78,29 +64,36 @@ public class BrowserManager {
      *
      * @param listener The listener to register.
      */
-    public void registerOnLoadStateChangeListener(@NonNull OnLoadStateChangeListener listener) {
-        if (mOnLoadStateChangeListener != null) {
+    public void registerLoadStateListener(@NonNull String url,
+        @NonNull LoadStateListener listener) {
+
+        if (mUrlLoadStateListeners == null) {
+            throw new IllegalStateException("You should initialize BrowserManager before register listener");
+        }
+
+        if (mUrlLoadStateListeners.containsKey(url)) {
             throw new IllegalStateException("There is already a listener registered");
         }
-        mOnLoadStateChangeListener = listener;
+        mUrlLoadStateListeners.put(url, listener);
     }
 
     /**
      * Unregisters a listener that was previously added with
-     * {@link #registerOnLoadStateChangeListener}.
+     * {@link #registerLoadStateListener}.
      *
      * Must be called from the main thread.
      *
-     * @param listener The listener to unregister.
+     * @param url The url for unregister listener.
      */
-    public void unregisterOnLoadStateChangeListener(@NonNull OnLoadStateChangeListener listener) {
-        if (mOnLoadStateChangeListener == null) {
+    public void unregisterOnLoadStateListener(String url) {
+
+        if (!mUrlLoadStateListeners.containsKey(url)) {
             throw new IllegalStateException("No listener register");
         }
-        if (mOnLoadStateChangeListener != listener) {
+        if (mUrlLoadStateListeners.get(url) == null) {
             throw new IllegalArgumentException("Attempting to unregister the wrong listener");
         }
-        mOnLoadStateChangeListener = null;
+        mUrlLoadStateListeners.remove(url);
     }
 
     /**
@@ -147,12 +140,6 @@ public class BrowserManager {
         try {
             url = URLDecoder.decode(url, "utf-8");
 
-            // Mark load complete indicator as false.
-            mIsLoadComplete.set(false);
-
-            // Add this link to load url collection.
-            mLoadUrlSet.add(url);
-
             // Establish relationship between url and webView.
             mWebViewPool.put(url, webView);
 
@@ -171,12 +158,6 @@ public class BrowserManager {
 
         try {
             url = URLDecoder.decode(url, "utf-8");
-
-            // Mark load complete indicator as false.
-            mIsLoadComplete.set(false);
-
-            // Add this link to load url collection.
-            mLoadUrlSet.add(url);
 
             // Establish relationship between url and webView.
             mWebViewPool.put(url, webView);
@@ -315,35 +296,12 @@ public class BrowserManager {
                 }
 
                 @Override
-                public void onPageStarted(final WebView view, String url, Bitmap favicon) {
-                    super.onPageStarted(view, url, favicon);
-                    Logger.d(TAG, "onPageStarted: ");
-                    // Handle WebView loading timeout problem.
-                    if (mHandler != null) {
-                        mHandler.postDelayed(new Runnable() {
-                            @Override
-                            public void run() {
-                                if (view != null && view.getProgress() < TIME_OUT_PROGRESS) {
-                                    mIsLoadComplete.set(false);
-                                    mOnLoadStateChangeListener.onLoadFailed(0,
-                                        TAG + " load timeout.");
-                                }
-                            }
-                        }, TIME_OUT_MILLIS);
-                    }
-                }
-
-                @Override
-                public void onPageFinished(WebView view, String url) {
-                    String title = view.getTitle(); // Get page title
-
-                    Logger.d(TAG, "onPageFinished WebView title=" + title);
-                }
-
-                @Override
                 public void onReceivedError(WebView view, final int errorCode,
                     final String description, String failingUrl) {
-                    mOnLoadStateChangeListener.onLoadFailed(errorCode, description);
+                    String url = view.getOriginalUrl();
+                    if (mUrlLoadStateListeners != null && mUrlLoadStateListeners.containsKey(url)) {
+                        mUrlLoadStateListeners.get(url).onLoadFailed(errorCode, description);
+                    }
                     Toast.makeText(view.getContext(), "Load failed with error: " + description,
                         Toast.LENGTH_LONG).show();
                 }
@@ -382,13 +340,15 @@ public class BrowserManager {
                     Logger.d(TAG, "onProgressChanged: " + newProgress);
                     if (view != null && newProgress == 100) {
                         // Page load complete
-                        if (!mIsLoadComplete.get()) {
-                            mIsLoadComplete.set(true);
-                            if (mIsPreload) {
-                                Logger.d(TAG, "Preload complete");
+                        String url = view.getOriginalUrl();
+                        if (!mFinishLoadUrlSet.contains(url)) {
+                            mFinishLoadUrlSet.add(url);
+                            if (mPreloadUrlSet.contains(url)) {
+                                Logger.d(TAG, "preload url:" + url + " complete");
                             }
-                            if (mOnLoadStateChangeListener != null) {
-                                mOnLoadStateChangeListener.onLoadComplete();
+                            if (mUrlLoadStateListeners != null
+                                && mUrlLoadStateListeners.containsKey(url)) {
+                                mUrlLoadStateListeners.get(url).onLoadComplete();
                             }
                         }
                     }
@@ -446,11 +406,14 @@ public class BrowserManager {
     }
 
     /**
-     * Check if web resources is preloaded.
+     * Check if web resources is preload.
      *
      * @return true if web resource is preloaded, otherwise return false.
      */
-    public boolean isPreload(String url) {
+    public boolean isPreloadUrl(@NonNull String url) {
+        if (TextUtils.isEmpty(url) || "null".equalsIgnoreCase(url)) {
+            throw new IllegalArgumentException("url == null!");
+        }
         return mPreloadUrlSet.contains(url);
     }
 
@@ -459,18 +422,19 @@ public class BrowserManager {
      *
      * @return true if web resource is load complete, otherwise return false.
      */
-    public boolean isLoadComplete(String url) {
-        return mLoadUrlSet.contains(url) && mIsLoadComplete.get();
+    public boolean isLoadComplete(@NonNull String url) {
+
+        if (TextUtils.isEmpty(url) && "null".equalsIgnoreCase(url)) {
+            throw new IllegalArgumentException("url == null!");
+        }
+
+        return mFinishLoadUrlSet.contains(url);
     }
 
     /**
      * Clean up WebView object
      */
     public void clearWebView(String url) {
-
-        mIsPreload = false;
-
-        mIsLoadComplete.set(false);
 
         WebView webView = getWebView(url);
 
@@ -490,10 +454,6 @@ public class BrowserManager {
      * Destroy WebView object.
      */
     public void destroyWebView(String url) {
-
-        mIsPreload = false;
-
-        mIsLoadComplete.set(false);
 
         WebView webView = getWebView(url);
 
@@ -527,7 +487,7 @@ public class BrowserManager {
     /**
      * Interface for listening web resource load state changed.
      */
-    public interface OnLoadStateChangeListener {
+    public interface LoadStateListener {
 
         void onLoadComplete();
 
