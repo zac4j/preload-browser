@@ -33,9 +33,9 @@ import java.util.Set;
  * Created by Zaccc on 2017/12/7.
  */
 
-public class BrowserManager {
+public class BrowserLoadManager {
 
-    private static final String TAG = BrowserManager.class.getSimpleName();
+    private static final String TAG = BrowserLoadManager.class.getSimpleName();
 
     private Context mAppContext;
     // Collection for preload url links.
@@ -47,7 +47,7 @@ public class BrowserManager {
     // Collection for url load state listener.
     private Map<String, LoadStateListener> mUrlLoadStateListeners;
 
-    BrowserManager(@NonNull Context appContext) {
+    BrowserLoadManager(@NonNull Context appContext) {
         mAppContext = appContext;
         mPreloadUrlSet = new HashSet<>();
         mFinishLoadUrlSet = new HashSet<>();
@@ -68,7 +68,7 @@ public class BrowserManager {
         @NonNull LoadStateListener listener) {
 
         if (mUrlLoadStateListeners == null) {
-            throw new IllegalStateException("You should initialize BrowserManager before register listener");
+            throw new IllegalStateException("You should initialize BrowserLoadManager before register listener");
         }
 
         if (mUrlLoadStateListeners.containsKey(url)) {
@@ -106,7 +106,7 @@ public class BrowserManager {
         WebView webView = prepareWebView(mAppContext);
 
         if (webView == null) {
-            throw new IllegalStateException("You should initialize BrowserManager before load url");
+            throw new IllegalStateException("You should initialize BrowserLoadManager before load url");
         }
 
         if (!Utils.isValidUrl(url)) {
@@ -130,7 +130,7 @@ public class BrowserManager {
 
         if (webView == null) {
             throw new IllegalStateException(
-                "You should initialize BrowserManager before load url.");
+                "You should initialize BrowserLoadManager before load url.");
         }
 
         if (!Utils.isValidUrl(url)) {

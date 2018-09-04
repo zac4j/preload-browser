@@ -3,8 +3,6 @@ package com.zac4j.web;
 import android.app.Service;
 import android.content.Intent;
 import android.os.IBinder;
-import com.zac4j.web.browser.BrowserDialogManager;
-import com.zac4j.web.browser.BrowserManager;
 
 /**
  * Service for detecting App lifecycle change.

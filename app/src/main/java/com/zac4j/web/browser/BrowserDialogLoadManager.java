@@ -15,30 +15,30 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * Created by Zaccc on 2018/1/18.
  */
 
-public class BrowserDialogManager {
+public class BrowserDialogLoadManager {
 
-    private static final String TAG = BrowserDialogManager.class.getSimpleName();
+    private static final String TAG = BrowserDialogLoadManager.class.getSimpleName();
 
     private static final Object LOCK = new Object();
     private AtomicBoolean mHasDialog;
     private BrowserDialogFragment mBrowserDialog;
-    private BrowserManager.LoadStateListener mLoadStateListener;
+    private BrowserLoadManager.LoadStateListener mLoadStateListener;
 
-    private static BrowserDialogManager sInstance;
-    private BrowserManager mBrowserManager;
+    private static BrowserDialogLoadManager sInstance;
+    private BrowserLoadManager mBrowserManager;
     private String mUrl;
 
-    public static BrowserDialogManager getInstance(Context appContext) {
+    public static BrowserDialogLoadManager getInstance(Context appContext) {
         if (sInstance == null) {
             synchronized (LOCK) {
-                sInstance = new BrowserDialogManager(appContext);
+                sInstance = new BrowserDialogLoadManager(appContext);
             }
         }
         return sInstance;
     }
 
-    private BrowserDialogManager(Context appContext) {
-        mBrowserManager = new BrowserManager(appContext);
+    private BrowserDialogLoadManager(Context appContext) {
+        mBrowserManager = new BrowserLoadManager(appContext);
         mHasDialog = new AtomicBoolean(false);
     }
 
@@ -55,19 +55,7 @@ public class BrowserDialogManager {
             }
             mBrowserDialog = dialogClass.newInstance();
             mBrowserDialog.show(fragmentManager, TAG);
-            mBrowserDialog.setLifecycleListener(new BrowserDialogFragment.LifecycleListener() {
-                @Override
-                public void onDialogShown(ViewGroup container) {
-                    mHasDialog.set(true);
-                    mBrowserManager.assembleWebView(mUrl, container);
-                }
-
-                @Override
-                public void onDialogDismiss(ViewGroup container) {
-                    mHasDialog.set(false);
-                    mBrowserManager.removeWebView(container);
-                }
-            });
+            mBrowserDialog.setLifecycleListener(createLifecycleListener());
         } catch (InstantiationException | IllegalAccessException e) {
             Logger.e(TAG, e.getMessage());
         }
@@ -106,9 +94,8 @@ public class BrowserDialogManager {
             return;
         }
 
-        mLoadStateListener = new BrowserManager.LoadStateListener() {
-            @Override
-            public void onLoadComplete() {
+        mLoadStateListener = new BrowserLoadManager.LoadStateListener() {
+            @Override public void onLoadComplete() {
                 try {
                     mBrowserDialog = dialogClass.newInstance();
                     mBrowserDialog.show(fragmentManager, TAG);
@@ -118,8 +105,7 @@ public class BrowserDialogManager {
                 }
             }
 
-            @Override
-            public void onLoadFailed(int errorCode, String description) {
+            @Override public void onLoadFailed(int errorCode, String description) {
                 Logger.e(TAG,
                     "load url failed, errorCode : " + errorCode + ", description: " + description);
             }
@@ -142,9 +128,8 @@ public class BrowserDialogManager {
             return;
         }
 
-        mLoadStateListener = new BrowserManager.LoadStateListener() {
-            @Override
-            public void onLoadComplete() {
+        mLoadStateListener = new BrowserLoadManager.LoadStateListener() {
+            @Override public void onLoadComplete() {
                 try {
                     mBrowserDialog = dialogClass.newInstance();
                     mBrowserDialog.setArguments(bundle);
@@ -155,8 +140,7 @@ public class BrowserDialogManager {
                 }
             }
 
-            @Override
-            public void onLoadFailed(int errorCode, String description) {
+            @Override public void onLoadFailed(int errorCode, String description) {
                 Logger.e(TAG,
                     "load url failed, errorCode : " + errorCode + ", description: " + description);
             }
@@ -172,14 +156,12 @@ public class BrowserDialogManager {
      */
     private BrowserDialogFragment.LifecycleListener createLifecycleListener() {
         return new BrowserDialogFragment.LifecycleListener() {
-            @Override
-            public void onDialogShown(ViewGroup container) {
+            @Override public void onDialogShown(ViewGroup container) {
                 mHasDialog.set(true);
                 mBrowserManager.assembleWebView(mUrl, container);
             }
 
-            @Override
-            public void onDialogDismiss(ViewGroup container) {
+            @Override public void onDialogDismiss(ViewGroup container) {
                 mHasDialog.set(false);
                 mBrowserManager.removeWebView(container);
             }
@@ -200,7 +182,7 @@ public class BrowserDialogManager {
     }
 
     /**
-     * Preload given url by {@link BrowserManager}.
+     * Preload given url by {@link BrowserLoadManager}.
      *
      * @param url given url to preload web resource.
      */
@@ -240,7 +222,7 @@ public class BrowserDialogManager {
     }
 
     /**
-     * Load given url by {@link BrowserManager}.
+     * Load given url by {@link BrowserLoadManager}.
      *
      * @param url given url to preload web resource.
      */

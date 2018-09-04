@@ -9,7 +9,7 @@ import android.widget.Toast;
 import com.zac4j.web.Logger;
 import com.zac4j.web.R;
 import com.zac4j.web.Utils;
-import com.zac4j.web.browser.BrowserDialogManager;
+import com.zac4j.web.browser.BrowserDialogLoadManager;
 import com.zac4j.web.browser.Scheme;
 import com.zac4j.web.router.UrlRouter;
 import com.zac4j.web.ui.dialog.RedPacketDialogFragment;
@@ -17,7 +17,7 @@ import com.zac4j.web.ui.dialog.RedPacketDialogFragment;
 public class SecondaryActivity extends AppCompatActivity {
 
     private static final String TAG = SecondaryActivity.class.getSimpleName();
-    private BrowserDialogManager mBrowserManager;
+    private BrowserDialogLoadManager mBrowserManager;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState,
@@ -31,7 +31,7 @@ public class SecondaryActivity extends AppCompatActivity {
         super.onStart();
         Logger.d(TAG, "onStart");
 
-        mBrowserManager = BrowserDialogManager.getInstance(getApplicationContext());
+        mBrowserManager = BrowserDialogLoadManager.getInstance(getApplicationContext());
         String url = Utils.provideUrl();
         // Verify if browser manager preload data complete.
         if (mBrowserManager.isPreloadUrl(url)) {

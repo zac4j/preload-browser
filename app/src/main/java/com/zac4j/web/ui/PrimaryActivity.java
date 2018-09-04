@@ -8,7 +8,7 @@ import com.zac4j.web.AppLifecycleService;
 import com.zac4j.web.Logger;
 import com.zac4j.web.R;
 import com.zac4j.web.Utils;
-import com.zac4j.web.browser.BrowserDialogManager;
+import com.zac4j.web.browser.BrowserDialogLoadManager;
 
 public class PrimaryActivity extends AppCompatActivity {
 
@@ -42,13 +42,13 @@ public class PrimaryActivity extends AppCompatActivity {
     private void preload(String url) {
         Logger.d(TAG,
             "Preload url in PrimaryActivity and will display in SecondaryActivity in a DialogFragment");
-        // Step one: get BrowserManager instance
-        BrowserDialogManager browserManager =
-            BrowserDialogManager.getInstance(getApplicationContext());
+        // Step one: get BrowserLoadManager instance
+        BrowserDialogLoadManager browserManager =
+            BrowserDialogLoadManager.getInstance(getApplicationContext());
         // Step two: set url to preload data
         browserManager.preloadUrl(url);
         //browserManager.preloadUrl(Utils.provideAnotherUrl());
-        // Step three: set WebView instance settings, you can modify it urself by invoke BrowserManager.getWebView.
+        // Step three: set WebView instance settings, you can modify it urself by invoke BrowserLoadManager.getWebView.
         //browserManager.setupWebViewWithDefaults();
     }
 }
