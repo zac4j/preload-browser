@@ -42,6 +42,19 @@ public class BrowserDialogLoadManager {
         mHasDialog = new AtomicBoolean(false);
     }
 
+    public void showBrowserDialog(String url, FragmentManager fragmentManager,
+        Class<? extends BrowserDialogFragment> dialogClass) {
+        if (isPreloadUrl(url)) {
+            if (isLoadComplete(url)) {
+                showDialog(fragmentManager, dialogClass);
+            } else {
+                showDialogOnLoadComplete(fragmentManager, dialogClass);
+            }
+        } else {
+            showDialogOnLoadComplete(fragmentManager, dialogClass);
+        }
+    }
+
     /**
      * Show a browser dialog.
      *
