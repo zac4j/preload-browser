@@ -33,9 +33,9 @@ import java.util.Set;
  * Created by Zaccc on 2017/12/7.
  */
 
-public class BrowserLoadManager {
+public class BrowserLoader {
 
-    private static final String TAG = BrowserLoadManager.class.getSimpleName();
+    private static final String TAG = BrowserLoader.class.getSimpleName();
 
     private Context mAppContext;
     // Collection for preload url links.
@@ -47,7 +47,7 @@ public class BrowserLoadManager {
     // Collection for url load state listener.
     private Map<String, LoadStateListener> mUrlLoadStateListeners;
 
-    BrowserLoadManager(@NonNull Context appContext) {
+    BrowserLoader(@NonNull Context appContext) {
         mAppContext = appContext;
         mPreloadUrlSet = new HashSet<>();
         mFinishLoadUrlSet = new HashSet<>();
@@ -68,7 +68,7 @@ public class BrowserLoadManager {
         @NonNull LoadStateListener listener) {
 
         if (mUrlLoadStateListeners == null) {
-            throw new IllegalStateException("You should initialize BrowserLoadManager before register listener");
+            throw new IllegalStateException("You should initialize BrowserLoader before register listener");
         }
 
         if (mUrlLoadStateListeners.containsKey(url)) {
@@ -106,7 +106,7 @@ public class BrowserLoadManager {
         WebView webView = prepareWebView(mAppContext);
 
         if (webView == null) {
-            throw new IllegalStateException("You should initialize BrowserLoadManager before load url");
+            throw new IllegalStateException("You should initialize BrowserLoader before load url");
         }
 
         if (!Utils.isValidUrl(url)) {
@@ -130,7 +130,7 @@ public class BrowserLoadManager {
 
         if (webView == null) {
             throw new IllegalStateException(
-                "You should initialize BrowserLoadManager before load url.");
+                "You should initialize BrowserLoader before load url.");
         }
 
         if (!Utils.isValidUrl(url)) {
@@ -263,7 +263,7 @@ public class BrowserLoadManager {
                 if (router == null) {
                     return super.shouldOverrideUrlLoading(view, url);
                 }
-                return router.route(url);
+                return router.route(view, url);
             }
 
             @Override

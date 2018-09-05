@@ -5,19 +5,20 @@ import android.os.PersistableBundle;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
+import android.webkit.WebView;
 import android.widget.Toast;
 import com.zac4j.web.Logger;
 import com.zac4j.web.R;
 import com.zac4j.web.Utils;
-import com.zac4j.web.browser.BrowserDialogLoadManager;
-import com.zac4j.web.browser.Scheme;
+import com.zac4j.web.browser.DialogBrowserLoader;
+import com.zac4j.web.Scheme;
 import com.zac4j.web.router.UrlRouter;
-import com.zac4j.web.ui.dialog.RedPacketDialogFragment;
+import com.zac4j.web.ui.dialog.GameDialogFragment;
 
 public class SecondaryActivity extends AppCompatActivity {
 
     private static final String TAG = SecondaryActivity.class.getSimpleName();
-    private BrowserDialogLoadManager mBrowserManager;
+    private DialogBrowserLoader mBrowserManager;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState,
@@ -31,7 +32,7 @@ public class SecondaryActivity extends AppCompatActivity {
         super.onStart();
         Logger.d(TAG, "onStart");
 
-        mBrowserManager = BrowserDialogLoadManager.getInstance(getApplicationContext());
+        mBrowserManager = DialogBrowserLoader.getInstance(getApplicationContext());
         String url = Utils.provideUrl();
         // Verify if browser manager preload data complete.
         if (mBrowserManager.isPreloadUrl(url)) {
@@ -40,7 +41,7 @@ public class SecondaryActivity extends AppCompatActivity {
                 // add intercept scheme in the WebViewClient::shouldOverrideUrlLoading url route specification.
                 mBrowserManager.addUrlRouter(url, new UrlRouter() {
                     @Override
-                    public boolean route(String scheme) {
+                    public boolean route(WebView webView, String scheme) {
 
                         if (TextUtils.isEmpty(scheme)) {
                             return false;
@@ -58,18 +59,17 @@ public class SecondaryActivity extends AppCompatActivity {
                         return false;
                     }
                 });
-                mBrowserManager.showDialog(getSupportFragmentManager(),
-                    RedPacketDialogFragment.class);
+                mBrowserManager.showDialog(getSupportFragmentManager(), GameDialogFragment.class);
             } else {
                 Logger.d(TAG, "Web page is preload and haven't load complete.");
                 mBrowserManager.showDialogOnLoadComplete(getSupportFragmentManager(),
-                    RedPacketDialogFragment.class);
+                    GameDialogFragment.class);
             }
         } else {
             Logger.d(TAG, "Web page haven't load yet.");
             mBrowserManager.loadUrl(url);
             mBrowserManager.showDialogOnLoadComplete(getSupportFragmentManager(),
-                RedPacketDialogFragment.class);
+                GameDialogFragment.class);
         }
     }
 

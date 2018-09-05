@@ -15,30 +15,30 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * Created by Zaccc on 2018/1/18.
  */
 
-public class BrowserDialogLoadManager {
+public class DialogBrowserLoader {
 
-    private static final String TAG = BrowserDialogLoadManager.class.getSimpleName();
+    private static final String TAG = DialogBrowserLoader.class.getSimpleName();
 
     private static final Object LOCK = new Object();
     private AtomicBoolean mHasDialog;
     private BrowserDialogFragment mBrowserDialog;
-    private BrowserLoadManager.LoadStateListener mLoadStateListener;
+    private BrowserLoader.LoadStateListener mLoadStateListener;
 
-    private static BrowserDialogLoadManager sInstance;
-    private BrowserLoadManager mBrowserManager;
+    private static DialogBrowserLoader sInstance;
+    private BrowserLoader mBrowserManager;
     private String mUrl;
 
-    public static BrowserDialogLoadManager getInstance(Context appContext) {
+    public static DialogBrowserLoader getInstance(Context appContext) {
         if (sInstance == null) {
             synchronized (LOCK) {
-                sInstance = new BrowserDialogLoadManager(appContext);
+                sInstance = new DialogBrowserLoader(appContext);
             }
         }
         return sInstance;
     }
 
-    private BrowserDialogLoadManager(Context appContext) {
-        mBrowserManager = new BrowserLoadManager(appContext);
+    private DialogBrowserLoader(Context appContext) {
+        mBrowserManager = new BrowserLoader(appContext);
         mHasDialog = new AtomicBoolean(false);
     }
 
@@ -107,7 +107,7 @@ public class BrowserDialogLoadManager {
             return;
         }
 
-        mLoadStateListener = new BrowserLoadManager.LoadStateListener() {
+        mLoadStateListener = new BrowserLoader.LoadStateListener() {
             @Override public void onLoadComplete() {
                 try {
                     mBrowserDialog = dialogClass.newInstance();
@@ -141,7 +141,7 @@ public class BrowserDialogLoadManager {
             return;
         }
 
-        mLoadStateListener = new BrowserLoadManager.LoadStateListener() {
+        mLoadStateListener = new BrowserLoader.LoadStateListener() {
             @Override public void onLoadComplete() {
                 try {
                     mBrowserDialog = dialogClass.newInstance();
@@ -195,7 +195,7 @@ public class BrowserDialogLoadManager {
     }
 
     /**
-     * Preload given url by {@link BrowserLoadManager}.
+     * Preload given url by {@link BrowserLoader}.
      *
      * @param url given url to preload web resource.
      */
@@ -235,7 +235,7 @@ public class BrowserDialogLoadManager {
     }
 
     /**
-     * Load given url by {@link BrowserLoadManager}.
+     * Load given url by {@link BrowserLoader}.
      *
      * @param url given url to preload web resource.
      */

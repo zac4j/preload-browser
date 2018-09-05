@@ -16,26 +16,27 @@ import okio.BufferedSink;
 import okio.Okio;
 
 /**
+ * This class use OKHttp to load url contents.
  * Created by Zaccc on 2018/4/20.
  */
-public class BrowserCacheManager {
+public class OKBrowserLoader {
 
-    private static final String TAG = "WebPageLoadManager";
+    private static final String TAG = "OKBrowserLoader";
 
-    private static BrowserCacheManager sInstance;
+    private static OKBrowserLoader sInstance;
     private static final Object LOCK = new Object();
     private Map<String, String> mCachedPageMapper;
 
-    private BrowserCacheManager() {
+    private OKBrowserLoader() {
         if (mCachedPageMapper == null) {
             mCachedPageMapper = new HashMap<>();
         }
     }
 
-    public static BrowserCacheManager getInstance() {
+    public static OKBrowserLoader getInstance() {
         if (sInstance == null) {
             synchronized (LOCK) {
-                sInstance = new BrowserCacheManager();
+                sInstance = new OKBrowserLoader();
             }
         }
         return sInstance;

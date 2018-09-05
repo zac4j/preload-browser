@@ -10,7 +10,6 @@ import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.widget.FrameLayout;
-import com.zac4j.web.browser.Scheme;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
@@ -36,10 +35,6 @@ public class Utils {
             Logger.e(TAG, e.getMessage());
         }
         return result;
-    }
-
-    public static String provideAnotherUrl() {
-        return "https://m.baidu.com/";
     }
 
     /**

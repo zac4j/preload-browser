@@ -3,6 +3,7 @@ package com.zac4j.web.browser;
 import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.v4.app.DialogFragment;
+import android.support.v4.app.FragmentManager;
 import android.view.ViewGroup;
 import com.zac4j.web.Logger;
 
@@ -35,7 +36,14 @@ public abstract class BrowserDialogFragment extends DialogFragment {
         mLifecycleListener.onDialogDismiss(provideBrowserContainer());
     }
 
-    public abstract ViewGroup provideBrowserContainer();
+    /**
+     * This method is help for FragmentManager get DialogFragment object by {@link FragmentManager#findFragmentByTag}
+     *
+     * @return tag of dialog fragment.
+     */
+    protected abstract String getPageTag();
+
+    protected abstract ViewGroup provideBrowserContainer();
 
     public interface LifecycleListener {
         void onDialogShown(ViewGroup container);

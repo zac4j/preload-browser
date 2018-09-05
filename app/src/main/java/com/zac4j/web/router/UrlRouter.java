@@ -1,5 +1,7 @@
 package com.zac4j.web.router;
 
+import android.webkit.WebView;
+
 /**
  * Browser link & schema dispatch specs.
  * Created by Zaccc on 2018/1/19.
@@ -7,5 +9,5 @@ package com.zac4j.web.router;
 
 public interface UrlRouter {
 
-    boolean route(String scheme);
+    boolean route(WebView webView, String scheme);
 }

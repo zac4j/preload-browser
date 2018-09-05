@@ -20,9 +20,9 @@ import com.zac4j.web.browser.BrowserDialogFragment;
  * Created by Zaccc on 11/20/2017.
  */
 
-public class RedPacketDialogFragment extends BrowserDialogFragment {
+public class GameDialogFragment extends BrowserDialogFragment {
 
-    private static final String TAG = RedPacketDialogFragment.class.getSimpleName();
+    private static final String TAG = GameDialogFragment.class.getSimpleName();
 
     @SuppressLint("SetJavaScriptEnabled")
     @Nullable
@@ -63,6 +63,11 @@ public class RedPacketDialogFragment extends BrowserDialogFragment {
     @Override
     public void onDismiss(DialogInterface dialog) {
         super.onDismiss(dialog);
+    }
+
+    @Override
+    protected String getPageTag() {
+        return TAG;
     }
 
     @Override

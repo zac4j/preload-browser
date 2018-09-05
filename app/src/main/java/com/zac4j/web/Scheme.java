@@ -1,4 +1,4 @@
-package com.zac4j.web.browser;
+package com.zac4j.web;
 
 /**
  * Scheme constants

@@ -14,7 +14,7 @@ import android.widget.FrameLayout;
 import com.zac4j.web.Logger;
 import com.zac4j.web.R;
 import com.zac4j.web.Utils;
-import com.zac4j.web.loader.BrowserCacheManager;
+import com.zac4j.web.loader.OKBrowserLoader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import okio.BufferedSource;
@@ -63,7 +63,7 @@ public class QuaternaryActivity extends Activity {
             WebResourceRequest request) {
 
             String url = request.getUrl().toString();
-            String cacheLocation = BrowserCacheManager.getInstance().getCacheLocation(url);
+            String cacheLocation = OKBrowserLoader.getInstance().getCacheLocation(url);
             if (TextUtils.isEmpty(cacheLocation)) {
                 return super.shouldInterceptRequest(view, request);
             }
