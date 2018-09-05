@@ -1,16 +1,16 @@
 # preload-browser
 Preload url content in Android WebView.
 
-#### There are two screens in this scenario:
-+ Main Screen, holds the url that wish to load and show in Browser Screen. 
-+ Browser Screen, WebView host and wishes to show url content.
+#### two screens:
++ **Screen A**: preload url content behind of screen. 
++ **Screen B**: WebView host and display url content.
 
-#### There are two approachs to preload url content:
-+ The first approach is attempt to pre-initialize a WebView and preload url content:
-  - The step is: get url in MainScreen -> initialize a WebView(via app context) -> load url content -> assemble in BrowserScreen(WebView host screen).
+#### two approachs:
++ **Plan A**: pre-initialize a WebView and preload url content:
+  - The step is: initialize a WebView in ScreenA -> load url content -> assemble WebView in ScreenB.
 
-+ The second approach is attempt to load url content via network framework like OKHttp:
-  - The step is: get url in MainScreen -> load url content via OKHttp and save it (in memory or local storage) -> post data to WebView in BrowserScreen.
++ **Plan B**: preload url content via OKHttp:
+  - The step is: In ScreenA load url content via OKHttp and save it (in memory or local storage) -> post data to ScreenB's WebView.
 
-**© 2018 Zac**
+**© 2018 Fanny & Zac**
 
