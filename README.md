@@ -10,7 +10,7 @@ Preload url content in Android WebView.
   - The step is: initialize a WebView in ScreenA -> load url content -> assemble WebView in ScreenB.
 
 + **Plan B**: preload url content via OKHttp:
-  - The step is: In ScreenA load url content via OKHttp and save it (in memory or local storage) -> post data to ScreenB's WebView.
+  - The step is: in ScreenA load url content via OKHttp and save it (in memory or local storage) -> post data to ScreenB's WebView.
 
 **© 2018 Fanny & Zac**
 
