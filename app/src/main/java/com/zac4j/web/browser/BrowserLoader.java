@@ -78,6 +78,17 @@ public class BrowserLoader {
     }
 
     /**
+     * Check if given url has register LoadStateListener.
+     * @param url given url link to check if register
+     *
+     * @return true if given url has register listener, otherwise false.
+     */
+    boolean isRegisterLoadStateListener(@NonNull String url) {
+        return mUrlLoadStateListeners != null && !mUrlLoadStateListeners.isEmpty
+        && mUrlLoadStateListeners.containsKey(url);
+    }
+
+    /**
      * Unregisters a listener that was previously added with
      * {@link #registerLoadStateListener}.
      *
@@ -114,9 +125,10 @@ public class BrowserLoader {
         }
 
         // Add this link to preload url collection.
-        mPreloadUrlSet.add(url);
-
-        loadUrl(url, webView);
+        if (mPreloadUrlSet.add(url)) {
+            // If there is no same url in the preload url set, we will load it.
+            loadUrl(url, webView);
+        }
     }
 
     /**
@@ -137,15 +149,11 @@ public class BrowserLoader {
             throw new IllegalArgumentException("You shouldn't load url with an invalid url");
         }
 
-        try {
-            url = URLDecoder.decode(url, "utf-8");
-
+        if (!mWebViewPool.containsKey(url)) {
             // Establish relationship between url and webView.
             mWebViewPool.put(url, webView);
 
             webView.loadUrl(url);
-        } catch (UnsupportedEncodingException e) {
-            Logger.e(TAG, "decode url failed", e);
         }
     }
 
@@ -156,16 +164,10 @@ public class BrowserLoader {
      */
     private void loadUrl(@NonNull String url, @NonNull WebView webView) {
 
-        try {
-            url = URLDecoder.decode(url, "utf-8");
+        // Establish relationship between url and webView.
+        mWebViewPool.put(url, webView);
 
-            // Establish relationship between url and webView.
-            mWebViewPool.put(url, webView);
-
-            webView.loadUrl(url);
-        } catch (UnsupportedEncodingException e) {
-            Logger.e(TAG, "decode url failed", e);
-        }
+        webView.loadUrl(url);
     }
 
     /**
@@ -341,13 +343,11 @@ public class BrowserLoader {
                     if (view != null && newProgress == 100) {
                         // Page load complete
                         String url = view.getOriginalUrl();
-                        if (!mFinishLoadUrlSet.contains(url)) {
-                            mFinishLoadUrlSet.add(url);
+                        if (mFinishLoadUrlSet.add(url)) {
                             if (mPreloadUrlSet.contains(url)) {
                                 Logger.d(TAG, "preload url:" + url + " complete");
                             }
-                            if (mUrlLoadStateListeners != null
-                                && mUrlLoadStateListeners.containsKey(url)) {
+                            if (mUrlLoadStateListeners != null&& mUrlLoadStateListeners.containsKey(url)) {
                                 mUrlLoadStateListeners.get(url).onLoadComplete();
                             }
                         }
@@ -369,35 +369,25 @@ public class BrowserLoader {
         WebSettings settings = webView.getSettings();
         settings.setJavaScriptEnabled(true);
 
-        // UI display
+        // support html viewport
         settings.setUseWideViewPort(true);
         settings.setLoadWithOverviewMode(true);
+
+        // support zoom control
         settings.setBuiltInZoomControls(true);
         settings.setDisplayZoomControls(false);
-        settings.setTextZoom(100);
         webView.setScrollBarStyle(View.SCROLLBARS_OUTSIDE_OVERLAY);
 
-        // WebView content access, cache, storage.
-        settings.setAllowContentAccess(true);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
-            settings.setAllowUniversalAccessFromFileURLs(true);
-        }
-
-        settings.setCacheMode(WebSettings.LOAD_DEFAULT);
+        // cache settings
         settings.setAppCacheEnabled(true);
         settings.setDomStorageEnabled(true);
         settings.setDatabaseEnabled(true);
 
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN_MR1) {
-            webView.removeJavascriptInterface("searchBoxJavaBridge_");
-            webView.removeJavascriptInterface("accessibility");
-            webView.removeJavascriptInterface("accessibilityTraversal");
-        }
-
-        // Enable mix load http/https content
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            settings.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
-        }
+        // security settings
+        settings.setSavePassword(true);
+        webView.removeJavascriptInterface("searchBoxJavaBridge_");
+        webView.removeJavascriptInterface("accessibility");
+        webView.removeJavascriptInterface("accessibilityTraversal");
 
         // Enable remote debugging via chrome://inspect
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
